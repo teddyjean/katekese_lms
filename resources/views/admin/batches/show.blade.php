@@ -58,21 +58,115 @@
 
     {{-- Pending --}}
     @if($pending->count())
-    <div class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <h3 class="text-sm font-semibold text-amber-700 mb-3">Menunggu Persetujuan ({{ $pending->count() }})</h3>
-        <div class="space-y-2">
+    <div class="mb-6">
+        <h3 class="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">{{ $pending->count() }}</span>
+            Menunggu Persetujuan
+        </h3>
+        <div class="space-y-4">
             @foreach($pending as $p)
-            <div class="flex items-center justify-between gap-3 bg-white rounded-lg px-4 py-2 border border-amber-100">
-                <span class="text-sm font-medium text-gray-800">{{ $p->name }}</span>
-                <div class="flex gap-2">
-                    <form method="POST" action="{{ route('admin.batches.peserta.approve', [$batch, $p]) }}">
-                        @csrf
-                        <button class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg">Terima</button>
-                    </form>
-                    <form method="POST" action="{{ route('admin.batches.peserta.reject', [$batch, $p]) }}">
-                        @csrf
-                        <button class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg">Tolak</button>
-                    </form>
+            @php $warning = $batch->eligibilityWarningFor($p); @endphp
+            <div class="bg-white border border-amber-200 rounded-xl overflow-hidden shadow-sm">
+                {{-- Header --}}
+                <div class="flex items-center justify-between gap-3 px-5 py-3 bg-amber-50 border-b border-amber-100">
+                    <div>
+                        <p class="font-semibold text-gray-800 text-sm">{{ $p->name }}</p>
+                        <p class="text-xs text-gray-500">{{ $p->email }} @if($p->phone) &middot; {{ $p->phone }} @endif</p>
+                    </div>
+                    <span class="text-xs text-amber-600 font-medium shrink-0">Mendaftar {{ $p->pivot->joined_at ? \Carbon\Carbon::parse($p->pivot->joined_at)->format('d M Y') : '-' }}</span>
+                </div>
+
+                {{-- Profil --}}
+                <div class="px-5 py-4">
+                    @if($p->profile)
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm mb-4">
+
+                        <div>
+                            <p class="text-xs text-gray-400">Tanggal Lahir</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->tanggal_lahir?->format('d M Y') ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Sekolah</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->sekolah ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Kelas</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->kelas ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Wilayah</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->wilayah ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Lingkungan</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->lingkungan ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Nama Ayah</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->nama_ayah ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Nama Ibu</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->nama_ibu ?: '-' }}</p>
+                        </div>
+
+                        <div class="col-span-2 sm:col-span-3 border-t border-gray-100 pt-3 mt-1">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Data Sakramen</p>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
+                                <div>
+                                    <p class="text-xs text-gray-400">Nama Baptis</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->nama_baptis ?: '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Gereja Baptis</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->gereja_baptis ?: '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">No. Surat Baptis</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->nomor_buku_baptis ?: '-' }}</p>
+                                </div>
+                                <div class="col-span-2 sm:col-span-3">
+                                    <p class="text-xs text-gray-400">Gereja Komuni Pertama</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->gereja_komuni_pertama ?: '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    <p class="text-xs text-gray-400 italic mb-4">Siswa belum mengisi profil.</p>
+                    @endif
+
+                    {{-- Warning eligibilitas --}}
+                    @if($warning)
+                    <div class="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 mb-4 text-xs text-amber-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                        </svg>
+                        <span>{{ $warning }}</span>
+                    </div>
+                    @endif
+
+                    {{-- Aksi --}}
+                    <div class="flex flex-wrap items-start gap-3 pt-1">
+                        <form method="POST" action="{{ route('admin.batches.peserta.approve', [$batch, $p]) }}">
+                            @csrf
+                            <button class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">
+                                Terima
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ route('admin.batches.peserta.reject', [$batch, $p]) }}" class="flex-1 min-w-[220px]">
+                            @csrf
+                            <div class="flex gap-2">
+                                <input type="text" name="rejection_note"
+                                       placeholder="Alasan penolakan (opsional)"
+                                       class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-red-200">
+                                <button class="text-sm bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition-colors shrink-0">
+                                    Tolak
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
             @endforeach
@@ -130,19 +224,6 @@
         </table>
     </div>
 
-    {{-- Tambah Peserta --}}
-    @if($availablePeserta->count())
-    <form method="POST" action="{{ route('admin.batches.peserta.assign', $batch) }}" class="flex gap-2 items-center">
-        @csrf
-        <select name="user_id" class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
-            <option value="">-- Tambah Peserta --</option>
-            @foreach($availablePeserta as $u)
-                <option value="{{ $u->id }}">{{ $u->name }}</option>
-            @endforeach
-        </select>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg">Tambah</button>
-    </form>
-    @endif
 </div>
 
 {{-- ── TAB: MATERI ──────────────────────────────────────────────────────── --}}

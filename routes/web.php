@@ -71,7 +71,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:katekis'])->gr
     Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     Route::post('batches/{batch}/katekis', [BatchController::class, 'assignKatekis'])->name('batches.katekis.assign');
     Route::delete('batches/{batch}/katekis/{user}', [BatchController::class, 'removeKatekis'])->name('batches.katekis.remove');
-    Route::post('batches/{batch}/peserta', [BatchController::class, 'assignPeserta'])->name('batches.peserta.assign');
     Route::delete('batches/{batch}/peserta/{user}', [BatchController::class, 'removePeserta'])->name('batches.peserta.remove');
     Route::post('batches/{batch}/peserta/{user}/approve', [BatchController::class, 'approvePeserta'])->name('batches.peserta.approve');
     Route::post('batches/{batch}/peserta/{user}/reject', [BatchController::class, 'rejectPeserta'])->name('batches.peserta.reject');

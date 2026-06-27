@@ -93,17 +93,11 @@ class BatchController extends Controller
         $batch->load(['program', 'katekis']);
 
         $peserta  = $batch->approvedPeserta()->with('profile')->orderBy('name')->get();
-        $pending  = $batch->peserta()->wherePivot('status', 'pending')->orderBy('name')->get();
+        $pending  = $batch->peserta()->with('profile')->wherePivot('status', 'pending')->orderBy('name')->get();
         $materials = $batch->materials()->orderBy('order')->get();
         $assignments = $batch->assignments()->orderByDesc('deadline')->get();
         $tests    = $batch->tests()->withCount('questions')->orderByDesc('id')->get();
         $meetings = $batch->meetings()->with(['attendances'])->orderBy('scheduled_at')->get();
-
-        $availablePeserta = User::where('role', 'peserta')
-            ->where('is_active', true)
-            ->whereDoesntHave('batchesAsPeserta', fn ($q) => $q->where('batch_id', $batch->id))
-            ->orderBy('name')
-            ->get(['id', 'name']);
 
         $availableKatekis = User::where('role', 'katekis')
             ->where('is_active', true)
@@ -115,7 +109,7 @@ class BatchController extends Controller
 
         return view('admin.batches.show', compact(
             'batch', 'peserta', 'pending', 'materials', 'assignments',
-            'tests', 'meetings', 'availablePeserta', 'availableKatekis', 'batchMaterials'
+            'tests', 'meetings', 'availableKatekis', 'batchMaterials'
         ));
     }
 
@@ -176,15 +170,6 @@ class BatchController extends Controller
     }
 
     // ── Peserta Enrollment ───────────────────────────────────────────────────
-
-    public function assignPeserta(Request $request, Batch $batch)
-    {
-        $request->validate(['user_id' => 'required|exists:users,id']);
-        $batch->peserta()->syncWithoutDetaching([
-            $request->user_id => ['joined_at' => now()->toDateString(), 'status' => 'approved'],
-        ]);
-        return back()->with('success', 'Peserta berhasil ditambahkan.');
-    }
 
     public function removePeserta(Batch $batch, User $user)
     {

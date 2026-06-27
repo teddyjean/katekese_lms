@@ -91,9 +91,32 @@ class BatchController extends Controller
     public function show(Batch $batch)
     {
         $batch->load(['program', 'katekis']);
-        $peserta = $batch->approvedPeserta()->with('profile')->orderBy('name')->get();
 
-        return view('admin.batches.show', compact('batch', 'peserta'));
+        $peserta  = $batch->approvedPeserta()->with('profile')->orderBy('name')->get();
+        $pending  = $batch->peserta()->wherePivot('status', 'pending')->orderBy('name')->get();
+        $materials = $batch->materials()->orderBy('order')->get();
+        $assignments = $batch->assignments()->orderByDesc('deadline')->get();
+        $tests    = $batch->tests()->withCount('questions')->orderByDesc('id')->get();
+        $meetings = $batch->meetings()->with(['attendances'])->orderBy('scheduled_at')->get();
+
+        $availablePeserta = User::where('role', 'peserta')
+            ->where('is_active', true)
+            ->whereDoesntHave('batchesAsPeserta', fn ($q) => $q->where('batch_id', $batch->id))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $availableKatekis = User::where('role', 'katekis')
+            ->where('is_active', true)
+            ->whereDoesntHave('batchesAsKatekis', fn ($q) => $q->where('batch_id', $batch->id))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $batchMaterials = $materials;
+
+        return view('admin.batches.show', compact(
+            'batch', 'peserta', 'pending', 'materials', 'assignments',
+            'tests', 'meetings', 'availablePeserta', 'availableKatekis', 'batchMaterials'
+        ));
     }
 
     public function updateDocumentFields(Request $request, Batch $batch)

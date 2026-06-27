@@ -13,7 +13,7 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with('profile')->where('role', 'peserta');
+        $query = User::with(['profile', 'approvedBatchesAsPeserta.program'])->where('role', 'peserta');
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');

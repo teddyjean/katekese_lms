@@ -51,6 +51,7 @@
                 <th class="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wide">Wilayah</th>
                 <th class="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wide">Lingkungan</th>
                 <th class="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wide">No HP</th>
+                <th class="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wide">Pendampingan</th>
                 <th class="text-left px-5 py-3.5 text-gray-500 font-semibold text-xs uppercase tracking-wide">Aksi</th>
             </tr>
         </thead>
@@ -65,6 +66,25 @@
                 <td class="px-5 py-3.5 text-gray-600">{{ $student->profile?->lingkungan ?: '-' }}</td>
                 <td class="px-5 py-3.5 text-gray-600">{{ $student->phone ?: '-' }}</td>
                 <td class="px-5 py-3.5">
+                    @if($student->approvedBatchesAsPeserta->isEmpty())
+                        <span class="text-gray-400 text-xs">-</span>
+                    @else
+                        <div class="flex flex-wrap gap-1">
+                            @foreach($student->approvedBatchesAsPeserta as $batch)
+                                @if($batch->status === 'active')
+                                    <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                        {{ $batch->program->name }}
+                                    </span>
+                                @else
+                                    <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">
+                                        {{ $batch->program->name }}
+                                    </span>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+                </td>
+                <td class="px-5 py-3.5">
                     <a href="{{ route('admin.students.edit', $student) }}"
                        class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
                         Edit
@@ -73,7 +93,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="px-5 py-12 text-center text-gray-400">Tidak ada siswa ditemukan.</td>
+                <td colspan="6" class="px-5 py-12 text-center text-gray-400">Tidak ada siswa ditemukan.</td>
             </tr>
             @endforelse
         </tbody>

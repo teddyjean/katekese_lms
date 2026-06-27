@@ -7,6 +7,7 @@ use App\Models\Batch;
 use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BatchController extends Controller
 {

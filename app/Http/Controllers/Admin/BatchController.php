@@ -32,7 +32,7 @@ class BatchController extends Controller
 
         $batches = $query->orderByDesc('start_date')->paginate(15)->withQueryString();
 
-        $yearsQuery = Batch::selectRaw('YEAR(start_date) as year')
+        $yearsQuery = Batch::selectRaw("strftime('%Y', start_date) as year")
             ->whereNotNull('start_date')
             ->when($request->filled('program_id'), fn ($q) => $q->where('program_id', $request->program_id))
             ->groupBy('year')
@@ -45,7 +45,17 @@ class BatchController extends Controller
     public function create()
     {
         $programs = Program::where('status', 'active')->orderBy('name')->get();
-        return view('admin.batches.create', compact('programs'));
+
+        $katekisByProgram = $programs->mapWithKeys(fn ($program) => [
+            $program->id => $program->katekis()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['users.id', 'users.name'])
+                ->map(fn ($k) => ['id' => $k->id, 'name' => $k->name])
+                ->values(),
+        ]);
+
+        return view('admin.batches.create', compact('programs', 'katekisByProgram'));
     }
 
     public function store(Request $request)
@@ -56,6 +66,8 @@ class BatchController extends Controller
             'start_date'  => 'nullable|date',
             'end_date'    => 'nullable|date|after_or_equal:start_date',
             'description' => 'nullable|string',
+            'katekis_ids' => 'nullable|array',
+            'katekis_ids.*' => 'exists:users,id',
         ]);
 
         $batch = Batch::create([
@@ -66,6 +78,10 @@ class BatchController extends Controller
             'description' => $request->description,
             'status'      => 'active',
         ]);
+
+        if ($request->filled('katekis_ids')) {
+            $batch->katekis()->sync($request->katekis_ids);
+        }
 
         return redirect()->route('admin.batches.show', $batch)->with('success', 'Angkatan berhasil dibuat.');
     }

@@ -234,5 +234,6 @@ document.querySelectorAll('form[method="GET"] select').forEach(function(select) 
     });
 });
 </script>
+@stack('scripts')
 </body>
 </html>

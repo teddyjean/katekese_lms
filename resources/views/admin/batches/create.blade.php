@@ -14,13 +14,21 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Katekese</label>
-            <select name="program_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 @error('program_id') border-red-400 @enderror">
+            <select name="program_id" id="program_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 @error('program_id') border-red-400 @enderror">
                 <option value="">-- Pilih Jenis (Baptis / Komuni / Krisma) --</option>
                 @foreach($programs as $program)
                     <option value="{{ $program->id }}" @selected(old('program_id') == $program->id)>{{ $program->name }}</option>
                 @endforeach
             </select>
             @error('program_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+
+        <div id="katekis-section" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Katekis Pengajar</label>
+            <div id="katekis-list" class="border border-gray-200 rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto"></div>
+            <p id="katekis-empty" class="hidden text-sm text-amber-600 mt-1">
+                Belum ada katekis yang terdaftar untuk program ini.
+            </p>
         </div>
 
         <div>
@@ -62,4 +70,50 @@
         </div>
     </form>
 </div>
+@push('scripts')
+<script>
+    const katekisByProgram = @json($katekisByProgram);
+    const oldKatekis = @json(old('katekis_ids', []));
+
+    const programSelect  = document.getElementById('program_id');
+    const katekisSection = document.getElementById('katekis-section');
+    const katekisList    = document.getElementById('katekis-list');
+    const katekisEmpty   = document.getElementById('katekis-empty');
+
+    function renderKatekis(programId) {
+        katekisList.innerHTML = '';
+        const list = katekisByProgram[programId] ?? [];
+
+        if (!programId) {
+            katekisSection.classList.add('hidden');
+            return;
+        }
+
+        katekisSection.classList.remove('hidden');
+
+        if (list.length === 0) {
+            katekisEmpty.classList.remove('hidden');
+            katekisList.classList.add('hidden');
+            return;
+        }
+
+        katekisEmpty.classList.add('hidden');
+        katekisList.classList.remove('hidden');
+
+        list.forEach(k => {
+            const checked = oldKatekis.includes(String(k.id)) ? 'checked' : '';
+            katekisList.insertAdjacentHTML('beforeend', `
+                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="katekis_ids[]" value="${k.id}" ${checked}
+                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-300">
+                    ${k.name}
+                </label>
+            `);
+        });
+    }
+
+    programSelect.addEventListener('change', e => renderKatekis(e.target.value));
+    renderKatekis(programSelect.value);
+</script>
+@endpush
 @endsection

@@ -12,9 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('nama_baptis')->nullable();
-            $table->string('sekolah');
-            $table->string('kelas');
-            $table->date('tanggal_lahir');
+            $table->string('sekolah')->nullable();
+            $table->string('kelas')->nullable();
+            $table->date('tanggal_lahir')->nullable();
             $table->string('wilayah');
             $table->string('lingkungan');
             $table->timestamps();

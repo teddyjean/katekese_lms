@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    private function yearExpr(string $column): string
+    {
+        return DB::getDriverName() === 'sqlite'
+            ? "strftime('%Y', {$column})"
+            : "YEAR({$column})";
+    }
+
     public function index()
     {
         $stats = [
@@ -19,13 +26,15 @@ class DashboardController extends Controller
             'total_angkatan' => Batch::where('status', 'active')->count(),
         ];
 
+        $yearExpr = $this->yearExpr('batches.start_date');
+
         $pesertaPerProgramTahun = $this->groupedChartData(
             DB::table('batch_participants')
                 ->join('batches', 'batches.id', '=', 'batch_participants.batch_id')
                 ->join('programs', 'programs.id', '=', 'batches.program_id')
                 ->where('batch_participants.status', 'approved')
                 ->whereNotNull('batches.start_date')
-                ->selectRaw("programs.name as program, strftime('%Y', batches.start_date) as tahun, COUNT(DISTINCT batch_participants.user_id) as total")
+                ->selectRaw("programs.name as program, {$yearExpr} as tahun, COUNT(DISTINCT batch_participants.user_id) as total")
                 ->groupBy('programs.name', 'tahun')
                 ->orderBy('tahun')
                 ->get()
@@ -38,7 +47,7 @@ class DashboardController extends Controller
                 ->where('batch_participants.status', 'approved')
                 ->where('batches.status', 'completed')
                 ->whereNotNull('batches.start_date')
-                ->selectRaw("programs.name as program, strftime('%Y', batches.start_date) as tahun, COUNT(DISTINCT batch_participants.user_id) as total")
+                ->selectRaw("programs.name as program, {$yearExpr} as tahun, COUNT(DISTINCT batch_participants.user_id) as total")
                 ->groupBy('programs.name', 'tahun')
                 ->orderBy('tahun')
                 ->get()
@@ -54,10 +63,6 @@ class DashboardController extends Controller
         ));
     }
 
-    /**
-     * Transform rows of {program, tahun, total} into Chart.js-friendly
-     * {labels: [...years], datasets: [{label: program, data: [...]}]}.
-     */
     private function groupedChartData($rows): array
     {
         $years = $rows->pluck('tahun')->unique()->sort()->values();

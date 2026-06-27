@@ -32,7 +32,8 @@ class BatchController extends Controller
 
         $batches = $query->orderByDesc('start_date')->paginate(15)->withQueryString();
 
-        $yearsQuery = Batch::selectRaw("strftime('%Y', start_date) as year")
+        $yearExpr = DB::getDriverName() === 'sqlite' ? "strftime('%Y', start_date)" : "YEAR(start_date)";
+        $yearsQuery = Batch::selectRaw("{$yearExpr} as year")
             ->whereNotNull('start_date')
             ->when($request->filled('program_id'), fn ($q) => $q->where('program_id', $request->program_id))
             ->groupBy('year')

@@ -21,6 +21,12 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-7 shadow-2xl">
             <h2 class="text-lg font-semibold text-white mb-6">Masuk ke akun Anda</h2>
 
+            @if(session('success'))
+                <div class="mb-4 p-3.5 bg-green-500/10 border border-green-500/30 rounded-xl text-sm text-green-400">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             @if($errors->any())
                 <div class="mb-4 p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-400">
                     {{ $errors->first() }}

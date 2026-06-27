@@ -3,15 +3,9 @@
 @section('title', 'Daftar Katekis')
 
 @section('content')
-<div class="mb-6 flex items-start justify-between flex-wrap gap-y-3">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Daftar Katekis</h1>
-        <p class="text-gray-500 text-sm mt-1">Katekis yang melayani dalam program katekese</p>
-    </div>
-    <a href="{{ route('admin.katekis.create') }}"
-       class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm">
-        + Tambah Katekis
-    </a>
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Daftar Katekis</h1>
+    <p class="text-gray-500 text-sm mt-1">Katekis yang melayani dalam program katekese</p>
 </div>
 
 {{-- Filter --}}

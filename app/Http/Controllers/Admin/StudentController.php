@@ -8,7 +8,6 @@ use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class StudentController extends Controller
 {
@@ -53,32 +52,6 @@ class StudentController extends Controller
         $batches = Batch::orderBy('name')->get();
 
         return view('admin.students.index', compact('students', 'programs', 'batches'));
-    }
-
-    public function create()
-    {
-        return view('admin.students.create');
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'required|string|max:20',
-            'password' => ['required', Password::min(8)],
-        ]);
-
-        $student = User::create([
-            'name'      => $request->name,
-            'email'     => $request->email,
-            'phone'     => $request->phone,
-            'role'      => 'peserta',
-            'is_active' => true,
-            'password'  => Hash::make($request->password),
-        ]);
-
-        return redirect()->route('admin.students.index')->with('success', 'Siswa berhasil ditambahkan.');
     }
 
     public function show(User $student)

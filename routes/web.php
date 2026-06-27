@@ -51,8 +51,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:katekis'])->gr
 
     // Siswa
     Route::get('siswa', [StudentController::class, 'index'])->name('students.index');
-    Route::get('siswa/create', [StudentController::class, 'create'])->name('students.create');
-    Route::post('siswa', [StudentController::class, 'store'])->name('students.store');
     Route::get('siswa/{student}', [StudentController::class, 'show'])->name('students.show');
     Route::get('siswa/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
     Route::put('siswa/{student}', [StudentController::class, 'update'])->name('students.update');
@@ -61,8 +59,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:katekis'])->gr
 
     // Katekis
     Route::get('katekis', [KatekisController::class, 'index'])->name('katekis.index');
-    Route::get('katekis/create', [KatekisController::class, 'create'])->name('katekis.create');
-    Route::post('katekis', [KatekisController::class, 'store'])->name('katekis.store');
     Route::get('katekis/{katekis}', [KatekisController::class, 'show'])->name('katekis.show');
     Route::get('katekis/{katekis}/edit', [KatekisController::class, 'edit'])->name('katekis.edit');
     Route::put('katekis/{katekis}', [KatekisController::class, 'update'])->name('katekis.update');

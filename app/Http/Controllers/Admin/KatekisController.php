@@ -7,7 +7,6 @@ use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class KatekisController extends Controller
 {
@@ -37,38 +36,6 @@ class KatekisController extends Controller
         $programs = Program::orderBy('name')->get();
 
         return view('admin.katekis.index', compact('katekisList', 'programs'));
-    }
-
-    public function create()
-    {
-        $programs = Program::orderBy('name')->get();
-
-        return view('admin.katekis.create', compact('programs'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'required|string|max:20',
-            'password' => ['required', Password::min(8)],
-            'bidang'   => 'nullable|array',
-            'bidang.*' => 'exists:programs,id',
-        ]);
-
-        $katekis = User::create([
-            'name'      => $request->name,
-            'email'     => $request->email,
-            'phone'     => $request->phone,
-            'role'      => 'katekis',
-            'is_active' => true,
-            'password'  => Hash::make($request->password),
-        ]);
-
-        $katekis->programs()->sync($request->input('bidang', []));
-
-        return redirect()->route('admin.katekis.index')->with('success', 'Katekis berhasil ditambahkan.');
     }
 
     public function show(User $katekis)

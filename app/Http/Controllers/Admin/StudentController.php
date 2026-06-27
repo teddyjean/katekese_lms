@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Data\WilayahLingkungan;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Program;
@@ -72,7 +73,10 @@ class StudentController extends Controller
     {
         abort_unless($student->role === 'peserta', 404);
 
-        return view('admin.students.edit', compact('student'));
+        $student->load('profile');
+        $wilayahLingkungan = WilayahLingkungan::all();
+
+        return view('admin.students.edit', compact('student', 'wilayahLingkungan'));
     }
 
     public function update(Request $request, User $student)
@@ -80,9 +84,21 @@ class StudentController extends Controller
         abort_unless($student->role === 'peserta', 404);
 
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $student->id,
-            'phone' => 'required|string|max:20',
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|unique:users,email,' . $student->id,
+            'phone'                 => 'required|string|max:20',
+            'nama_baptis'           => 'nullable|string|max:255',
+            'nama_ayah'             => 'nullable|string|max:255',
+            'nama_ibu'              => 'nullable|string|max:255',
+            'gereja_baptis'         => 'nullable|string|max:255',
+            'nomor_buku_baptis'     => 'nullable|string|max:100',
+            'gereja_komuni_pertama' => 'nullable|string|max:255',
+            'alamat'                => 'nullable|string|max:1000',
+            'sekolah'               => 'nullable|string|max:255',
+            'kelas'                 => 'nullable|string|max:100',
+            'tanggal_lahir'         => 'nullable|date|before:today',
+            'wilayah'               => 'nullable|string',
+            'lingkungan'            => 'nullable|string',
         ]);
 
         $student->update([
@@ -90,6 +106,22 @@ class StudentController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
         ]);
+
+        $profileData = array_filter(
+            $request->only(
+                'nama_baptis', 'nama_ayah', 'nama_ibu',
+                'gereja_baptis', 'nomor_buku_baptis', 'gereja_komuni_pertama',
+                'alamat', 'sekolah', 'kelas', 'tanggal_lahir', 'wilayah', 'lingkungan'
+            ),
+            fn ($v) => $v !== null && $v !== ''
+        );
+
+        if (! empty($profileData)) {
+            $student->profile()->updateOrCreate(
+                ['user_id' => $student->id],
+                $profileData
+            );
+        }
 
         return redirect()->route('admin.students.show', $student)->with('success', 'Data siswa berhasil diperbarui.');
     }

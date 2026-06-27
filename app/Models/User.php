@@ -37,6 +37,21 @@ class User extends Authenticatable
         return $this->profile !== null;
     }
 
+    public function enrollmentEligibleProgramOrder(): int
+    {
+        $profile = $this->profile;
+
+        if (! $profile || empty($profile->gereja_baptis) || empty($profile->nomor_buku_baptis)) {
+            return 1;
+        }
+
+        if (empty($profile->gereja_komuni_pertama)) {
+            return 2;
+        }
+
+        return 3;
+    }
+
     protected $hidden = [
         'password',
         'remember_token',

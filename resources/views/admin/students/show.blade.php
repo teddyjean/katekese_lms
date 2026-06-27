@@ -87,6 +87,34 @@
                     <p class="text-xs text-gray-400">Alamat</p>
                     <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->alamat ?: '-' }}</p>
                 </div>
+
+                <div class="col-span-full border-t border-gray-100 pt-4 mt-1">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Data Orang Tua</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Nama Ayah</p>
+                    <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->nama_ayah ?: '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Nama Ibu</p>
+                    <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->nama_ibu ?: '-' }}</p>
+                </div>
+
+                <div class="col-span-full border-t border-gray-100 pt-4 mt-1">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Data Sakramen</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Gereja Baptis</p>
+                    <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->gereja_baptis ?: '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Nomor Buku Baptis</p>
+                    <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->nomor_buku_baptis ?: '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Gereja Komuni Pertama</p>
+                    <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->gereja_komuni_pertama ?: '-' }}</p>
+                </div>
             </div>
         @else
             <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">

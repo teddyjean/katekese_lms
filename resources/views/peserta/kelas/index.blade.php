@@ -31,6 +31,38 @@
         </p>
     </div>
 </div>
+@else
+{{-- Eligibility info --}}
+<div class="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-2xl px-5 py-4 mb-6 text-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0 text-blue-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
+    </svg>
+    <div>
+        <p class="font-semibold">
+            Program tersedia:
+            @if($eligibleOrder === 1) Calon Baptis
+            @elseif($eligibleOrder === 2) Calon Komuni Pertama
+            @else Calon Krisma
+            @endif
+        </p>
+        <p class="mt-0.5 text-blue-700">
+            @if($eligibleOrder === 1)
+                Lengkapi data Gereja Baptis dan Nomor Buku Baptis di <a href="{{ route('peserta.profile.edit') }}" class="underline font-medium">profil</a> untuk membuka program berikutnya.
+            @elseif($eligibleOrder === 2)
+                Lengkapi data Gereja Komuni Pertama di <a href="{{ route('peserta.profile.edit') }}" class="underline font-medium">profil</a> untuk membuka program Krisma.
+            @else
+                Anda telah memenuhi syarat untuk program Krisma.
+            @endif
+        </p>
+    </div>
+</div>
+@endif
+
+@if(session('success'))
+<div class="bg-green-50 border border-green-200 text-green-800 rounded-2xl px-5 py-4 mb-6 text-sm">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4 mb-6 text-sm">{{ session('error') }}</div>
 @endif
 
 {{-- Kelas Saya --}}
@@ -77,6 +109,8 @@
 {{-- Kelas Tersedia --}}
 <h2 class="font-semibold text-gray-700 mb-3 mt-8">Kelas Tersedia ({{ $available->count() }})</h2>
 
+@php $canEnroll = $user->hasCompleteProfile() && !$hasActiveEnrollment; @endphp
+
 @forelse($available as $batch)
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-3">
         <div class="flex items-start justify-between gap-3">
@@ -91,13 +125,16 @@
                 @csrf
                 <input type="hidden" name="batch_id" value="{{ $batch->id }}">
                 <button type="submit"
-                        class="shrink-0 {{ $user->hasCompleteProfile() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed' }}
+                        class="shrink-0 {{ $canEnroll ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed' }}
                                text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
-                        {{ $user->hasCompleteProfile() ? '' : 'disabled' }}>
+                        {{ $canEnroll ? '' : 'disabled' }}>
                     Daftar
                 </button>
             </form>
         </div>
+        @if($hasActiveEnrollment && $user->hasCompleteProfile())
+            <p class="text-xs text-amber-600 mt-2">Anda sudah memiliki pendaftaran aktif.</p>
+        @endif
     </div>
 @empty
     <div class="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100">

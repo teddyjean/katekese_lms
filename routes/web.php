@@ -52,8 +52,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:katekis'])->gr
     // Siswa
     Route::get('siswa', [StudentController::class, 'index'])->name('students.index');
     Route::get('siswa/{student}', [StudentController::class, 'show'])->name('students.show');
-    Route::get('siswa/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
-    Route::put('siswa/{student}', [StudentController::class, 'update'])->name('students.update');
     Route::patch('siswa/{student}/toggle-active', [StudentController::class, 'toggleActive'])->name('students.toggle-active');
     Route::patch('siswa/{student}/reset-password', [StudentController::class, 'resetPassword'])->name('students.reset-password');
 

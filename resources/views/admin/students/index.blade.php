@@ -85,9 +85,9 @@
                     @endif
                 </td>
                 <td class="px-5 py-3.5">
-                    <a href="{{ route('admin.students.edit', $student) }}"
-                       class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
-                        Edit
+                    <a href="{{ route('admin.students.show', $student) }}"
+                       class="text-xs font-medium bg-gray-50 text-gray-700 hover:bg-gray-100 px-2.5 py-1 rounded-lg transition-colors">
+                        Lihat
                     </a>
                 </td>
             </tr>

@@ -30,10 +30,6 @@
             </div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-            <a href="{{ route('admin.students.edit', $student) }}"
-               class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors">
-                Edit
-            </a>
             <form method="POST" action="{{ route('admin.students.toggle-active', $student) }}">
                 @csrf @method('PATCH')
                 <button type="submit"

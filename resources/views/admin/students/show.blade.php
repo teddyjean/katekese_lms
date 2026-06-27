@@ -108,7 +108,7 @@
                     <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->gereja_baptis ?: '-' }}</p>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-400">Nomor Buku Baptis</p>
+                    <p class="text-xs text-gray-400">Nomor Surat Baptis</p>
                     <p class="text-sm font-medium text-gray-800 mt-0.5">{{ $student->profile->nomor_buku_baptis ?: '-' }}</p>
                 </div>
                 <div>

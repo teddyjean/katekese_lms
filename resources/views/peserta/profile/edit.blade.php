@@ -169,7 +169,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nomor Buku Baptis</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nomor Surat Baptis</label>
                         <input type="text" name="nomor_buku_baptis"
                                value="{{ old('nomor_buku_baptis', $profile?->nomor_buku_baptis) }}"
                                placeholder="Nomor buku baptis"

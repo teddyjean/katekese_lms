@@ -47,7 +47,7 @@
         </p>
         <p class="mt-0.5 text-blue-700">
             @if($eligibleOrder === 1)
-                Lengkapi data Gereja Baptis dan Nomor Buku Baptis di <a href="{{ route('peserta.profile.edit') }}" class="underline font-medium">profil</a> untuk membuka program berikutnya.
+                Lengkapi data Gereja Baptis dan Nomor Surat Baptis di <a href="{{ route('peserta.profile.edit') }}" class="underline font-medium">profil</a> untuk membuka program berikutnya.
             @elseif($eligibleOrder === 2)
                 Lengkapi data Gereja Komuni Pertama di <a href="{{ route('peserta.profile.edit') }}" class="underline font-medium">profil</a> untuk membuka program Krisma.
             @else

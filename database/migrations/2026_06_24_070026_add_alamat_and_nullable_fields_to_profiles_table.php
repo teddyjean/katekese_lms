@@ -13,26 +13,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('profiles', function (Blueprint $table) {
-            $table->text('alamat')->nullable()->after('nama_baptis');
+            if (!Schema::hasColumn('profiles', 'alamat')) {
+                $table->text('alamat')->nullable()->after('nama_baptis');
+            }
         });
-
-        // Sekolah/kelas/tanggal_lahir only apply to siswa; katekis profiles don't have them.
-        DB::statement('ALTER TABLE profiles MODIFY COLUMN sekolah VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE profiles MODIFY COLUMN kelas VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE profiles MODIFY COLUMN tanggal_lahir DATE NULL');
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        DB::statement('ALTER TABLE profiles MODIFY COLUMN sekolah VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE profiles MODIFY COLUMN kelas VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE profiles MODIFY COLUMN tanggal_lahir DATE NOT NULL');
-
         Schema::table('profiles', function (Blueprint $table) {
-            $table->dropColumn('alamat');
+            if (Schema::hasColumn('profiles', 'alamat')) {
+                $table->dropColumn('alamat');
+            }
         });
     }
 };

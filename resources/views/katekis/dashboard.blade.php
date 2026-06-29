@@ -14,7 +14,14 @@
                     <p class="font-medium text-gray-800">{{ $batch->name }}</p>
                     <p class="text-sm text-gray-500">{{ $batch->program->name }}</p>
                 </div>
-                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Aktif</span>
+                <div class="flex items-center gap-2">
+                    @if($batch->pendingPeserta->count() > 0)
+                        <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-medium">
+                            ⚠ {{ $batch->pendingPeserta->count() }} Pending
+                        </span>
+                    @endif
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Aktif</span>
+                </div>
             </div>
         </div>
     @empty

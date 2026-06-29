@@ -9,7 +9,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $batches = Auth::user()->batchesAsKatekis()->with('program')->where('status', 'active')->get();
+        $batches = Auth::user()->batchesAsKatekis()->with(['program', 'pendingPeserta'])->where('status', 'active')->get();
 
         return view('katekis.dashboard', compact('batches'));
     }

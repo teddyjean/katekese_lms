@@ -3,13 +3,13 @@
 @section('content')
 
 @php
-    $ext        = strtolower(pathinfo($material->file_original_name, PATHINFO_EXTENSION));
-    $fileUrl    = Storage::url($material->file_path);
-    $absUrl     = asset($fileUrl);
-    $isImage    = in_array($ext, ['jpg', 'jpeg', 'png']);
-    $isPdf      = $ext === 'pdf';
-    $isVideo    = $ext === 'mp4';
-    $isOffice   = in_array($ext, ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']);
+    $ext           = $material->file_original_name ? strtolower(pathinfo($material->file_original_name, PATHINFO_EXTENSION)) : null;
+    $fileUrl       = $material->file_path ? Storage::url($material->file_path) : null;
+    $absUrl        = $fileUrl ? asset($fileUrl) : null;
+    $isImage       = in_array($ext, ['jpg', 'jpeg', 'png']);
+    $isPdf         = $ext === 'pdf';
+    $isOffice      = in_array($ext, ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']);
+    $videoEmbedUrl = $material->videoEmbedUrl();
 @endphp
 
 {{-- Breadcrumb + judul --}}
@@ -19,10 +19,12 @@
         <h1 class="text-2xl font-bold text-gray-800 mt-2">{{ $material->title }}</h1>
         <p class="text-gray-500 text-sm mt-1">{{ $material->batch->name }}</p>
     </div>
+    @if($canManage)
     <a href="{{ route('admin.materials.assessments.edit', $material) }}"
        class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm">
         Penilaian Materi
     </a>
+    @endif
 </div>
 
 {{-- Tugas & Test Terkait --}}
@@ -64,22 +66,25 @@
     {{-- Header bar --}}
     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-sm font-medium text-gray-700 truncate">{{ $material->file_original_name }}</p>
+            <p class="text-sm font-medium text-gray-700 truncate">{{ $material->file_original_name ?? 'Link Video' }}</p>
             <span class="inline-block text-xs font-semibold uppercase tracking-wide mt-0.5
-                @if($isPdf) text-red-500
+                @if($videoEmbedUrl) text-purple-500
+                @elseif($isPdf) text-red-500
                 @elseif($isImage) text-green-500
-                @elseif($isVideo) text-purple-500
                 @elseif($isOffice) text-blue-500
                 @else text-gray-400
                 @endif">
-                {{ $ext }}
+                {{ $videoEmbedUrl ? 'video' : $ext }}
             </span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
+            @if($canManage)
             <a href="{{ route('admin.materials.edit', $material) }}"
                class="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors">
                 Edit
             </a>
+            @endif
+            @if($fileUrl)
             <a href="{{ $fileUrl }}" download="{{ $material->file_original_name }}"
                class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -87,24 +92,28 @@
                 </svg>
                 Download
             </a>
+            @elseif($material->video_url)
+            <a href="{{ $material->video_url }}" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                Buka Video
+            </a>
+            @endif
         </div>
     </div>
 
     {{-- Preview area --}}
-    @if($isPdf)
+    @if($videoEmbedUrl)
+        <div class="bg-black" style="aspect-ratio: 16 / 9;">
+            <iframe src="{{ $videoEmbedUrl }}" class="w-full h-full" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+
+    @elseif($isPdf)
         <iframe src="{{ $fileUrl }}" class="w-full" style="height: 78vh;" frameborder="0"></iframe>
 
     @elseif($isImage)
         <div class="p-6 flex justify-center bg-gray-50">
             <img src="{{ $fileUrl }}" alt="{{ $material->title }}" class="max-w-full rounded-lg shadow-sm">
-        </div>
-
-    @elseif($isVideo)
-        <div class="bg-black flex justify-center p-4">
-            <video controls class="max-w-full rounded" style="max-height: 72vh;">
-                <source src="{{ $fileUrl }}" type="video/mp4">
-                Browser Anda tidak mendukung pemutaran video.
-            </video>
         </div>
 
     @elseif($isOffice)

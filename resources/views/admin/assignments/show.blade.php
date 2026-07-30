@@ -7,7 +7,9 @@
         <h1 class="text-2xl font-bold text-gray-800 mt-2">{{ $assignment->title }}</h1>
         <p class="text-gray-500 text-sm mt-1">Kelas: {{ $assignment->batch->name }} &middot; Nilai maks: {{ $assignment->max_score }}</p>
     </div>
+    @if($canManage)
     <a href="{{ route('admin.assignments.edit', $assignment) }}" class="text-sm text-gray-500 hover:text-blue-600 border border-gray-200 px-3 py-2 rounded-lg shrink-0">Edit</a>
+    @endif
 </div>
 
 @if($assignment->description)
@@ -75,6 +77,7 @@
                                     class="text-xs text-indigo-600 hover:underline">Preview</button>
                             <a href="{{ $fileUrl }}" download="{{ $sub->file_original_name }}"
                                class="text-xs text-green-600 hover:underline">Unduh</a>
+                            @if($canManage)
                             <form method="POST" action="{{ route('admin.submissions.grade', $sub) }}" class="flex items-center gap-2">
                                 @csrf @method('PATCH')
                                 <input type="number" name="grade" value="{{ $sub->grade }}" min="0" max="{{ $assignment->max_score }}" step="0.5"
@@ -85,6 +88,7 @@
                                        placeholder="Feedback (opsional)">
                                 <button type="submit" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Simpan</button>
                             </form>
+                            @endif
                         </div>
                     @endif
                 </td>

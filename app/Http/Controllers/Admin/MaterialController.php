@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Material;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
@@ -23,7 +24,9 @@ class MaterialController extends Controller
 
     public function create()
     {
-        $batches = Batch::orderByDesc('id')->get();
+        $batches = Batch::where('status', 'active')
+            ->whereHas('katekis', fn ($q) => $q->where('users.id', auth()->id()))
+            ->orderByDesc('id')->get();
         return view('admin.materials.create', compact('batches'));
     }
 
@@ -33,11 +36,24 @@ class MaterialController extends Controller
             'batch_id'    => 'required|exists:batches,id',
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'file'        => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,mp4',
+            'file'        => 'nullable|required_without:video_url|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
+            'video_url'   => 'nullable|required_without:file|url|max:2048',
         ]);
 
-        $file = $request->file('file');
-        $path = $file->store('materials', 'public');
+        $batch = Batch::findOrFail($request->batch_id);
+        Gate::authorize('manage', $batch);
+        if ($batch->isLocked()) {
+            return back()->withInput()->withErrors(['batch_id' => 'Kelas ini sudah selesai/diarsipkan, tidak bisa upload materi baru.']);
+        }
+
+        $path = null;
+        $originalName = null;
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('materials', 'public');
+            $originalName = $file->getClientOriginalName();
+        }
+
         $lastOrder = Material::where('batch_id', $request->batch_id)->max('order') ?? 0;
 
         Material::create([
@@ -46,7 +62,8 @@ class MaterialController extends Controller
             'title'              => $request->title,
             'description'        => $request->description,
             'file_path'          => $path,
-            'file_original_name' => $file->getClientOriginalName(),
+            'file_original_name' => $originalName,
+            'video_url'          => $request->video_url,
             'order'              => $lastOrder + 1,
         ]);
 
@@ -57,28 +74,42 @@ class MaterialController extends Controller
     public function show(Material $material)
     {
         $material->load(['batch', 'assignments', 'tests']);
-        return view('admin.materials.show', compact('material'));
+        $canManage = Gate::allows('manage', $material->batch);
+        return view('admin.materials.show', compact('material', 'canManage'));
     }
 
     public function edit(Material $material)
     {
-        $batches = Batch::orderByDesc('id')->get();
+        Gate::authorize('manage', $material->batch);
+
+        $batches = Batch::where(fn ($q) => $q
+                ->where('status', 'active')
+                ->whereHas('katekis', fn ($qq) => $qq->where('users.id', auth()->id()))
+            )
+            ->orWhere('id', $material->batch_id)
+            ->orderByDesc('id')->get();
         return view('admin.materials.edit', compact('material', 'batches'));
     }
 
     public function update(Request $request, Material $material)
     {
+        Gate::authorize('manage', $material->batch);
+
         $request->validate([
             'batch_id'    => 'required|exists:batches,id',
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'file'        => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,mp4',
+            'file'        => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
+            'video_url'   => 'nullable|url|max:2048',
         ]);
+
+        Gate::authorize('manage', Batch::findOrFail($request->batch_id));
 
         $data = [
             'batch_id'    => $request->batch_id,
             'title'       => $request->title,
             'description' => $request->description,
+            'video_url'   => $request->video_url,
         ];
 
         if ($request->hasFile('file')) {
@@ -95,6 +126,8 @@ class MaterialController extends Controller
 
     public function destroy(Material $material)
     {
+        Gate::authorize('manage', $material->batch);
+
         Storage::disk('public')->delete($material->file_path);
         $material->delete();
         return back()->with('success', 'Materi berhasil dihapus.');

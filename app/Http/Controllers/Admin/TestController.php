@@ -8,6 +8,7 @@ use App\Models\Material;
 use App\Models\Question;
 use App\Models\Test;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TestController extends Controller
 {
@@ -24,7 +25,9 @@ class TestController extends Controller
 
     public function create()
     {
-        $batches = Batch::orderByDesc('id')->get();
+        $batches = Batch::where('status', 'active')
+            ->whereHas('katekis', fn ($q) => $q->where('users.id', auth()->id()))
+            ->orderByDesc('id')->get();
         $materialsByBatch = Material::orderBy('order')->get()->groupBy('batch_id');
         return view('admin.tests.create', compact('batches', 'materialsByBatch'));
     }
@@ -38,6 +41,12 @@ class TestController extends Controller
             'description'      => 'nullable|string',
             'duration_minutes' => 'nullable|integer|min:1|max:300',
         ]);
+
+        $batch = Batch::findOrFail($request->batch_id);
+        Gate::authorize('manage', $batch);
+        if ($batch->isLocked()) {
+            return back()->withInput()->withErrors(['batch_id' => 'Kelas ini sudah selesai/diarsipkan, tidak bisa membuat test baru.']);
+        }
 
         $test = Test::create([
             'batch_id'         => $request->batch_id,
@@ -55,18 +64,28 @@ class TestController extends Controller
     public function show(Test $test)
     {
         $test->load(['questions.options', 'attempts.user', 'batch']);
-        return view('admin.tests.show', compact('test'));
+        $canManage = Gate::allows('manage', $test->batch);
+        return view('admin.tests.show', compact('test', 'canManage'));
     }
 
     public function edit(Test $test)
     {
-        $batches = Batch::orderByDesc('id')->get();
+        Gate::authorize('manage', $test->batch);
+
+        $batches = Batch::where(fn ($q) => $q
+                ->where('status', 'active')
+                ->whereHas('katekis', fn ($qq) => $qq->where('users.id', auth()->id()))
+            )
+            ->orWhere('id', $test->batch_id)
+            ->orderByDesc('id')->get();
         $materialsByBatch = Material::orderBy('order')->get()->groupBy('batch_id');
         return view('admin.tests.edit', compact('test', 'batches', 'materialsByBatch'));
     }
 
     public function update(Request $request, Test $test)
     {
+        Gate::authorize('manage', $test->batch);
+
         $request->validate([
             'batch_id'         => 'required|exists:batches,id',
             'material_id'      => 'nullable|exists:materials,id',
@@ -74,6 +93,8 @@ class TestController extends Controller
             'description'      => 'nullable|string',
             'duration_minutes' => 'nullable|integer|min:1|max:300',
         ]);
+
+        Gate::authorize('manage', Batch::findOrFail($request->batch_id));
 
         $test->update($request->only('batch_id', 'title', 'description', 'duration_minutes') + [
             'material_id' => $request->material_id ?: null,
@@ -83,6 +104,8 @@ class TestController extends Controller
 
     public function destroy(Test $test)
     {
+        Gate::authorize('manage', $test->batch);
+
         $batchId = $test->batch_id;
         $test->delete();
         return redirect()->to(route('admin.batches.show', $batchId) . '?tab=test')
@@ -91,6 +114,8 @@ class TestController extends Controller
 
     public function toggleActive(Test $test)
     {
+        Gate::authorize('manage', $test->batch);
+
         $test->update(['is_active' => !$test->is_active]);
         $status = $test->is_active ? 'diaktifkan' : 'dinonaktifkan';
         return back()->with('success', "Test berhasil {$status}.");
@@ -98,6 +123,12 @@ class TestController extends Controller
 
     public function storeQuestion(Request $request, Test $test)
     {
+        Gate::authorize('manage', $test->batch);
+
+        if ($test->batch->isLocked()) {
+            return back()->withErrors(['question_text' => 'Kelas ini sudah selesai/diarsipkan, tidak bisa menambah soal.']);
+        }
+
         $request->validate([
             'question_text' => 'required|string',
             'type'          => 'required|in:multiple_choice,essay',
@@ -130,6 +161,8 @@ class TestController extends Controller
 
     public function destroyQuestion(Test $test, Question $question)
     {
+        Gate::authorize('manage', $test->batch);
+
         $question->delete();
         return back()->with('success', 'Soal berhasil dihapus.');
     }

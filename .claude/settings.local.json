@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan tinker '--execute= *)"
+      "Bash(php artisan tinker '--execute= *)",
+      "Bash(php artisan *)",
+      "Bash(php -l app/Http/Controllers/Admin/BatchController.php)",
+      "Bash(php -l app/Models/User.php)",
+      "Bash(php -l app/Policies/BatchPolicy.php)"
     ]
   }
 }

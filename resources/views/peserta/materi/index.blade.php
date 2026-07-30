@@ -17,7 +17,7 @@
             @endif
         </div>
         <div class="flex items-center gap-3 shrink-0">
-            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded hidden sm:inline">{{ $material->file_original_name }}</span>
+            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded hidden sm:inline">{{ $material->file_original_name ?? 'Video' }}</span>
             <a href="{{ route('peserta.materi.show', $material) }}"
                class="text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg transition-colors">
                 Lihat

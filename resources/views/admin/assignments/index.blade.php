@@ -52,6 +52,7 @@
                            class="text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 px-2.5 py-1 rounded-lg transition-colors">
                             Submission
                         </a>
+                        @if(auth()->user()->teachesBatch($assignment->batch))
                         <a href="{{ route('admin.assignments.edit', $assignment) }}"
                            class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
                             Edit
@@ -63,6 +64,7 @@
                                 Hapus
                             </button>
                         </form>
+                        @endif
                     </div>
                 </td>
             </tr>

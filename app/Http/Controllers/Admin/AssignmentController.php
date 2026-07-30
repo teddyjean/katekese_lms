@@ -8,6 +8,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\Batch;
 use App\Models\Material;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class AssignmentController extends Controller
@@ -25,7 +26,9 @@ class AssignmentController extends Controller
 
     public function create()
     {
-        $batches = Batch::orderByDesc('id')->get();
+        $batches = Batch::where('status', 'active')
+            ->whereHas('katekis', fn ($q) => $q->where('users.id', auth()->id()))
+            ->orderByDesc('id')->get();
         $materialsByBatch = Material::orderBy('order')->get()->groupBy('batch_id');
         return view('admin.assignments.create', compact('batches', 'materialsByBatch'));
     }
@@ -40,6 +43,12 @@ class AssignmentController extends Controller
             'deadline'    => 'nullable|date',
             'max_score'   => 'required|integer|min:1|max:1000',
         ]);
+
+        $batch = Batch::findOrFail($request->batch_id);
+        Gate::authorize('manage', $batch);
+        if ($batch->isLocked()) {
+            return back()->withInput()->withErrors(['batch_id' => 'Kelas ini sudah selesai/diarsipkan, tidak bisa membuat tugas baru.']);
+        }
 
         Assignment::create([
             'batch_id'    => $request->batch_id,
@@ -59,18 +68,28 @@ class AssignmentController extends Controller
     {
         $assignment->load(['batch', 'submissions.user']);
         $peserta = $assignment->batch->peserta;
-        return view('admin.assignments.show', compact('assignment', 'peserta'));
+        $canManage = Gate::allows('manage', $assignment->batch);
+        return view('admin.assignments.show', compact('assignment', 'peserta', 'canManage'));
     }
 
     public function edit(Assignment $assignment)
     {
-        $batches = Batch::orderByDesc('id')->get();
+        Gate::authorize('manage', $assignment->batch);
+
+        $batches = Batch::where(fn ($q) => $q
+                ->where('status', 'active')
+                ->whereHas('katekis', fn ($qq) => $qq->where('users.id', auth()->id()))
+            )
+            ->orWhere('id', $assignment->batch_id)
+            ->orderByDesc('id')->get();
         $materialsByBatch = Material::orderBy('order')->get()->groupBy('batch_id');
         return view('admin.assignments.edit', compact('assignment', 'batches', 'materialsByBatch'));
     }
 
     public function update(Request $request, Assignment $assignment)
     {
+        Gate::authorize('manage', $assignment->batch);
+
         $request->validate([
             'batch_id'    => 'required|exists:batches,id',
             'material_id' => 'nullable|exists:materials,id',
@@ -79,6 +98,8 @@ class AssignmentController extends Controller
             'deadline'    => 'nullable|date',
             'max_score'   => 'required|integer|min:1|max:1000',
         ]);
+
+        Gate::authorize('manage', Batch::findOrFail($request->batch_id));
 
         $assignment->update($request->only('batch_id', 'title', 'description', 'deadline', 'max_score') + [
             'material_id' => $request->material_id ?: null,
@@ -89,6 +110,8 @@ class AssignmentController extends Controller
 
     public function destroy(Assignment $assignment)
     {
+        Gate::authorize('manage', $assignment->batch);
+
         foreach ($assignment->submissions as $sub) {
             Storage::disk('public')->delete($sub->file_path);
         }
@@ -98,6 +121,8 @@ class AssignmentController extends Controller
 
     public function grade(Request $request, AssignmentSubmission $submission)
     {
+        Gate::authorize('manage', $submission->assignment->batch);
+
         $request->validate([
             'grade'    => 'required|numeric|min:0|max:' . $submission->assignment->max_score,
             'feedback' => 'nullable|string|max:1000',

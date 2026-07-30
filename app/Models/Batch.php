@@ -68,6 +68,15 @@ class Batch extends Model
     }
 
     /**
+     * Kelas yang sudah selesai atau diarsipkan tidak boleh menerima materi,
+     * test, atau tugas baru lagi.
+     */
+    public function isLocked(): bool
+    {
+        return in_array($this->status, ['completed', 'archived'], true);
+    }
+
+    /**
      * Advisory-only eligibility note for a pending peserta, surfaced to the
      * katekis at approval time. Never blocks enrollment — sacraments received
      * at another parish aren't tracked in this system, so the katekis (who has

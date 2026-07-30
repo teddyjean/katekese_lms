@@ -96,12 +96,14 @@
                     <div class="flex items-center gap-1.5">
                         <a href="{{ route('admin.batches.show', $batch) }}"
                            class="text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 px-2.5 py-1 rounded-lg transition-colors">
-                            Kelola
+                            {{ auth()->user()->teachesBatch($batch) ? 'Kelola' : 'Lihat' }}
                         </a>
+                        @if(auth()->user()->teachesBatch($batch))
                         <a href="{{ route('admin.batches.edit', $batch) }}"
                            class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
                             Edit
                         </a>
+                        @endif
                     </div>
                 </td>
             </tr>

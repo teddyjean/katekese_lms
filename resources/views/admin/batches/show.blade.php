@@ -14,10 +14,14 @@
         </p>
     </div>
     <div class="flex gap-2">
+        @if($canManage)
         <a href="{{ route('admin.batches.edit', $batch) }}"
            class="text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl transition-colors shadow-sm">
             Edit Kelas
         </a>
+        @else
+        <span class="text-xs text-gray-400 italic px-2 py-2">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @endif
     </div>
 </div>
 
@@ -28,29 +32,29 @@
 @endif
 
 {{-- Tab Nav --}}
-<div class="print:hidden border-b border-gray-200 mb-6">
-    <nav class="-mb-px flex gap-1 overflow-x-auto" id="tab-nav">
+<div class="print:hidden mb-6">
+    <nav class="flex gap-1.5 overflow-x-auto pb-px" id="tab-nav">
         @php
             $tabs = [
-                'peserta'    => ['label' => 'Peserta', 'count' => $peserta->count()],
-                'materi'     => ['label' => 'Materi', 'count' => $materials->count()],
-                'tugas'      => ['label' => 'Tugas', 'count' => $assignments->count()],
-                'test'       => ['label' => 'Test', 'count' => $tests->count()],
-                'pertemuan'  => ['label' => 'Pertemuan', 'count' => $meetings->count()],
-                'dokumen'    => ['label' => 'Dokumen', 'count' => null],
+                'peserta'    => ['label' => 'Peserta', 'count' => $peserta->count(), 'active' => 'bg-blue-600 text-white shadow-sm', 'inactive' => 'bg-blue-50 text-blue-700 hover:bg-blue-100', 'badge' => 'bg-white/80 text-blue-700'],
+                'materi'     => ['label' => 'Materi', 'count' => $materials->count(), 'active' => 'bg-emerald-600 text-white shadow-sm', 'inactive' => 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100', 'badge' => 'bg-white/80 text-emerald-700'],
+                'tugas'      => ['label' => 'Tugas', 'count' => $assignments->count(), 'active' => 'bg-amber-500 text-white shadow-sm', 'inactive' => 'bg-amber-50 text-amber-700 hover:bg-amber-100', 'badge' => 'bg-white/80 text-amber-700'],
+                'test'       => ['label' => 'Test', 'count' => $tests->count(), 'active' => 'bg-purple-600 text-white shadow-sm', 'inactive' => 'bg-purple-50 text-purple-700 hover:bg-purple-100', 'badge' => 'bg-white/80 text-purple-700'],
+                'pertemuan'  => ['label' => 'Pertemuan', 'count' => $meetings->count(), 'active' => 'bg-cyan-600 text-white shadow-sm', 'inactive' => 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100', 'badge' => 'bg-white/80 text-cyan-700'],
+                'dokumen'    => ['label' => 'Dokumen', 'count' => null, 'active' => 'bg-rose-600 text-white shadow-sm', 'inactive' => 'bg-rose-50 text-rose-700 hover:bg-rose-100', 'badge' => 'bg-white/80 text-rose-700'],
             ];
         @endphp
         @foreach($tabs as $key => $tab)
-        <button type="button" data-tab="{{ $key }}"
-                class="tab-btn whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 transition-colors
-                       border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+        <button type="button" data-tab="{{ $key }}" data-active-class="{{ $tab['active'] }}" data-inactive-class="{{ $tab['inactive'] }}"
+                class="tab-btn whitespace-nowrap px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors {{ $tab['inactive'] }}">
             {{ $tab['label'] }}
             @if($tab['count'] !== null)
-                <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{{ $tab['count'] }}</span>
+                <span class="ml-1 text-xs {{ $tab['badge'] }} px-1.5 py-0.5 rounded-full">{{ $tab['count'] }}</span>
             @endif
         </button>
         @endforeach
     </nav>
+    <div class="border-b border-gray-200"></div>
 </div>
 
 {{-- ── TAB: PESERTA ─────────────────────────────────────────────────────── --}}
@@ -147,6 +151,7 @@
                     @endif
 
                     {{-- Aksi --}}
+                    @if($canManage)
                     <div class="flex flex-wrap items-start gap-3 pt-1">
                         <form method="POST" action="{{ route('admin.batches.peserta.approve', [$batch, $p]) }}">
                             @csrf
@@ -167,6 +172,9 @@
                             </div>
                         </form>
                     </div>
+                    @else
+                    <p class="text-xs text-gray-400 italic pt-1">Anda tidak mengajar kelas ini &mdash; tidak bisa memproses pendaftaran.</p>
+                    @endif
                 </div>
             </div>
             @endforeach
@@ -198,6 +206,7 @@
                     <td class="px-4 py-2.5 text-gray-500 hidden sm:table-cell">{{ $p->profile?->wilayah ?? '-' }}</td>
                     <td class="px-4 py-2.5 text-gray-500 hidden sm:table-cell">{{ $p->profile?->lingkungan ?? '-' }}</td>
                     <td class="px-4 py-2.5">
+                        @if($canManage)
                         <form method="POST" action="{{ route('admin.batches.peserta.kelulusan', [$batch, $p]) }}">
                             @csrf @method('PATCH')
                             <select name="lulus" onchange="this.form.submit()"
@@ -208,13 +217,20 @@
                                 <option value="0" @selected($p->pivot->lulus === false)>Tidak Lulus</option>
                             </select>
                         </form>
+                        @else
+                        <span class="text-xs {{ $p->pivot->lulus === true ? 'text-emerald-700' : ($p->pivot->lulus === false ? 'text-red-700' : 'text-gray-400') }}">
+                            {{ $p->pivot->lulus === true ? 'Lulus' : ($p->pivot->lulus === false ? 'Tidak Lulus' : '— Belum') }}
+                        </span>
+                        @endif
                     </td>
                     <td class="px-4 py-2.5 text-right">
+                        @if($canManage)
                         <form method="POST" action="{{ route('admin.batches.peserta.remove', [$batch, $p]) }}"
                               onsubmit="return confirm('Hapus {{ $p->name }} dari kelas ini?')">
                             @csrf @method('DELETE')
                             <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                         </form>
+                        @endif
                     </td>
                 </tr>
                 @empty
@@ -230,8 +246,14 @@
 <div id="tab-materi" class="tab-panel print:hidden hidden">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-sm font-semibold text-gray-700">Materi Kelas</h3>
-        <a href="{{ route('admin.materials.create') }}?batch_id={{ $batch->id }}"
-           class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Tambah Materi</a>
+        @if(!$canManage)
+            <span class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @elseif($batch->isLocked())
+            <span class="text-xs text-gray-400 italic">Kelas sudah selesai, tidak bisa menambah materi.</span>
+        @else
+            <a href="{{ route('admin.materials.create') }}?batch_id={{ $batch->id }}"
+               class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Tambah Materi</a>
+        @endif
     </div>
     <div class="space-y-3">
         @forelse($materials as $m)
@@ -245,6 +267,7 @@
                     @endif
                 </div>
             </div>
+            @if($canManage)
             <div class="flex gap-2 shrink-0">
                 <a href="{{ route('admin.materials.edit', $m) }}" class="text-xs text-gray-500 hover:text-blue-600">Edit</a>
                 <form method="POST" action="{{ route('admin.materials.destroy', $m) }}"
@@ -253,6 +276,7 @@
                     <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                 </form>
             </div>
+            @endif
         </div>
         @empty
         <div class="text-center py-10 text-gray-400 text-sm">Belum ada materi. Klik "+ Tambah Materi" untuk mulai.</div>
@@ -264,8 +288,14 @@
 <div id="tab-tugas" class="tab-panel print:hidden hidden">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-sm font-semibold text-gray-700">Tugas</h3>
-        <a href="{{ route('admin.assignments.create') }}?batch_id={{ $batch->id }}"
-           class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Buat Tugas</a>
+        @if(!$canManage)
+            <span class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @elseif($batch->isLocked())
+            <span class="text-xs text-gray-400 italic">Kelas sudah selesai, tidak bisa membuat tugas.</span>
+        @else
+            <a href="{{ route('admin.assignments.create') }}?batch_id={{ $batch->id }}"
+               class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Buat Tugas</a>
+        @endif
     </div>
     <div class="space-y-3">
         @forelse($assignments as $a)
@@ -279,12 +309,14 @@
             </div>
             <div class="flex gap-2 shrink-0">
                 <a href="{{ route('admin.assignments.show', $a) }}" class="text-xs text-gray-500 hover:text-blue-600">Nilai</a>
+                @if($canManage)
                 <a href="{{ route('admin.assignments.edit', $a) }}" class="text-xs text-gray-500 hover:text-blue-600">Edit</a>
                 <form method="POST" action="{{ route('admin.assignments.destroy', $a) }}"
                       onsubmit="return confirm('Hapus tugas ini?')">
                     @csrf @method('DELETE')
                     <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                 </form>
+                @endif
             </div>
         </div>
         @empty
@@ -297,8 +329,14 @@
 <div id="tab-test" class="tab-panel print:hidden hidden">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-sm font-semibold text-gray-700">Test / Kuis</h3>
-        <a href="{{ route('admin.tests.create') }}?batch_id={{ $batch->id }}"
-           class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Buat Test</a>
+        @if(!$canManage)
+            <span class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @elseif($batch->isLocked())
+            <span class="text-xs text-gray-400 italic">Kelas sudah selesai, tidak bisa membuat test.</span>
+        @else
+            <a href="{{ route('admin.tests.create') }}?batch_id={{ $batch->id }}"
+               class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Buat Test</a>
+        @endif
     </div>
     <div class="space-y-3">
         @forelse($tests as $t)
@@ -314,6 +352,7 @@
                     </span>
                 </p>
             </div>
+            @if($canManage)
             <div class="flex gap-2 shrink-0">
                 <form method="POST" action="{{ route('admin.tests.toggle-active', $t) }}">
                     @csrf @method('PATCH')
@@ -328,6 +367,7 @@
                     <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                 </form>
             </div>
+            @endif
         </div>
         @empty
         <div class="text-center py-10 text-gray-400 text-sm">Belum ada test.</div>
@@ -341,6 +381,7 @@
         {{-- Form Tambah Pertemuan --}}
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <h3 class="text-sm font-semibold text-gray-700 mb-3">Jadwalkan Pertemuan</h3>
+            @if($canManage)
             <form method="POST" action="{{ route('admin.meetings.store', $batch) }}" class="space-y-3">
                 @csrf
                 <div>
@@ -372,6 +413,9 @@
                     Tambah Pertemuan
                 </button>
             </form>
+            @else
+            <p class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</p>
+            @endif
         </div>
 
         {{-- List Pertemuan --}}
@@ -389,6 +433,7 @@
                             {{ $meeting->attendances->count() }} presensi tercatat
                         </p>
                     </div>
+                    @if($canManage)
                     <div class="flex gap-2 shrink-0">
                         <a href="{{ route('admin.meetings.attendance.edit', $meeting) }}"
                            class="text-xs text-blue-600 hover:text-blue-700">Presensi</a>
@@ -398,6 +443,7 @@
                             <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                         </form>
                     </div>
+                    @endif
                 </div>
             </div>
             @empty
@@ -410,7 +456,7 @@
 {{-- ── TAB: DOKUMEN ─────────────────────────────────────────────────────── --}}
 <div id="tab-dokumen" class="tab-panel hidden">
 
-    @if($batch->status === 'completed')
+    @if($batch->status === 'completed' && $canManage)
     <form method="POST" action="{{ route('admin.batches.update-document', $batch) }}"
           class="print:hidden mb-5 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-wrap gap-4 items-end text-sm">
         @csrf @method('PATCH')
@@ -546,8 +592,8 @@ const activeTab = params.get('tab') || 'peserta';
 function switchTab(name) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
     document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('border-blue-600', 'text-blue-600');
-        b.classList.add('border-transparent', 'text-gray-500');
+        b.classList.remove(...b.dataset.activeClass.split(' '));
+        b.classList.add(...b.dataset.inactiveClass.split(' '));
     });
 
     const panel = document.getElementById('tab-' + name);
@@ -555,8 +601,8 @@ function switchTab(name) {
 
     const btn = document.querySelector(`[data-tab="${name}"]`);
     if (btn) {
-        btn.classList.remove('border-transparent', 'text-gray-500');
-        btn.classList.add('border-blue-600', 'text-blue-600');
+        btn.classList.remove(...btn.dataset.inactiveClass.split(' '));
+        btn.classList.add(...btn.dataset.activeClass.split(' '));
     }
 
     const url = new URL(window.location);

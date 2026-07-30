@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Peserta\AssignmentController as PesertaAssignmentController;
 use App\Http\Controllers\Peserta\AttendanceController as PesertaAttendanceController;
 use App\Http\Controllers\Peserta\DashboardController as PesertaDashboard;
@@ -41,8 +42,17 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Verifikasi Email
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [VerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+        ->middleware('signed')->name('verification.verify');
+    Route::post('/email/verification-notification', [VerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')->name('verification.send');
+});
+
 // Admin (dikelola oleh katekis)
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:katekis'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:katekis'])->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
     // Profil Saya (katekis)
@@ -101,7 +111,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:katekis'])->gr
 });
 
 // Peserta
-Route::prefix('peserta')->name('peserta.')->middleware(['auth', 'role:peserta'])->group(function () {
+Route::prefix('peserta')->name('peserta.')->middleware(['auth', 'verified', 'role:peserta'])->group(function () {
     Route::get('/dashboard', [PesertaDashboard::class, 'index'])->name('dashboard');
 
     // Profil

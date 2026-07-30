@@ -9,11 +9,14 @@ use App\Models\Material;
 use App\Models\Meeting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class MeetingController extends Controller
 {
     public function store(Request $request, Batch $batch)
     {
+        Gate::authorize('manage', $batch);
+
         $request->validate([
             'tanggal'     => 'required|date',
             'jam'         => 'required|date_format:H:i',
@@ -36,12 +39,15 @@ class MeetingController extends Controller
 
     public function destroy(Meeting $meeting)
     {
+        Gate::authorize('manage', $meeting->batch);
+
         $meeting->delete();
         return back()->with('success', 'Jadwal pertemuan berhasil dihapus.');
     }
 
     public function editAttendance(Meeting $meeting)
     {
+        Gate::authorize('manage', $meeting->batch);
         abort_unless($meeting->canKatekisEdit(), 403, 'Presensi belum bisa diedit, tunggu jendela self check-in siswa tutup.');
 
         $meeting->load('batch');
@@ -53,6 +59,7 @@ class MeetingController extends Controller
 
     public function updateAttendance(Request $request, Meeting $meeting)
     {
+        Gate::authorize('manage', $meeting->batch);
         abort_unless($meeting->canKatekisEdit(), 403, 'Presensi belum bisa diedit, tunggu jendela self check-in siswa tutup.');
 
         $request->validate([

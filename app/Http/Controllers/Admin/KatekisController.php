@@ -7,6 +7,7 @@ use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class KatekisController extends Controller
 {
@@ -99,7 +100,7 @@ class KatekisController extends Controller
     {
         abort_unless($katekis->role === 'katekis', 404);
 
-        $newPassword = 'katekis123';
+        $newPassword = Str::random(10);
 
         $katekis->update(['password' => Hash::make($newPassword)]);
 

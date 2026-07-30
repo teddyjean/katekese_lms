@@ -8,11 +8,14 @@ use App\Models\Material;
 use App\Models\MaterialAssessment;
 use App\Models\TestAttempt;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class MaterialAssessmentController extends Controller
 {
     public function edit(Material $material)
     {
+        Gate::authorize('manage', $material->batch);
+
         $material->load(['batch', 'assignments', 'tests']);
 
         $students = $material->batch->approvedPeserta;
@@ -36,6 +39,8 @@ class MaterialAssessmentController extends Controller
 
     public function update(Request $request, Material $material)
     {
+        Gate::authorize('manage', $material->batch);
+
         $request->validate([
             'assessments'                     => 'required|array',
             'assessments.*.skor_penguasaan'   => 'nullable|in:A,B,C',

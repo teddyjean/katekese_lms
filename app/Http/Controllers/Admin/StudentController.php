@@ -8,6 +8,7 @@ use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -83,7 +84,7 @@ class StudentController extends Controller
     {
         abort_unless($student->role === 'peserta', 404);
 
-        $newPassword = 'katekis123';
+        $newPassword = Str::random(10);
 
         $student->update(['password' => Hash::make($newPassword)]);
 

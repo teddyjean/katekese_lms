@@ -41,17 +41,20 @@
             <tr class="hover:bg-gray-50/80 transition-colors">
                 <td class="px-5 py-3.5 font-medium text-gray-800">{{ $material->title }}</td>
                 <td class="px-5 py-3.5 text-gray-500">{{ $material->batch->name }}</td>
-                <td class="px-5 py-3.5 text-gray-400 text-xs">{{ $material->file_original_name }}</td>
+                <td class="px-5 py-3.5 text-gray-400 text-xs">{{ $material->file_original_name ?? 'Link Video' }}</td>
                 <td class="px-5 py-3.5">
                     <div class="flex items-center gap-1.5">
                         <a href="{{ route('admin.materials.show', $material) }}"
                            class="text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 px-2.5 py-1 rounded-lg transition-colors">
                             Preview
                         </a>
+                        @if($material->file_path)
                         <a href="{{ Storage::url($material->file_path) }}" download="{{ $material->file_original_name }}"
                            class="text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors">
                             Download
                         </a>
+                        @endif
+                        @if(auth()->user()->teachesBatch($material->batch))
                         <a href="{{ route('admin.materials.edit', $material) }}"
                            class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
                             Edit
@@ -63,6 +66,7 @@
                                 Hapus
                             </button>
                         </form>
+                        @endif
                     </div>
                 </td>
             </tr>

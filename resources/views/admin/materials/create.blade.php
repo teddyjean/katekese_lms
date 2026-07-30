@@ -28,10 +28,17 @@
             <textarea name="description" rows="3" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">{{ old('description') }}</textarea>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">File <span class="text-gray-400">(opsional jika mengisi link video)</span></label>
             <input type="file" name="file" class="w-full text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-2 @error('file') border-red-400 @enderror">
-            <p class="text-gray-400 text-xs mt-1">PDF, Word, PPT, gambar, atau MP4. Maks 20MB.</p>
+            <p class="text-gray-400 text-xs mt-1">PDF, Word, PPT, atau gambar. Maks 20MB.</p>
             @error('file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Link Video <span class="text-gray-400">(opsional jika mengunggah file)</span></label>
+            <input type="url" name="video_url" value="{{ old('video_url') }}" placeholder="https://youtube.com/watch?v=..."
+                   class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 @error('video_url') border-red-400 @enderror">
+            <p class="text-gray-400 text-xs mt-1">Tempel link YouTube, Vimeo, atau link embed lainnya. Video tidak bisa diupload langsung.</p>
+            @error('video_url') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
         <div class="pt-2 flex gap-3">
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">Upload</button>

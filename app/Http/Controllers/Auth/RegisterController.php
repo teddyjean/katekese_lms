@@ -34,7 +34,9 @@ class RegisterController extends Controller
             'password'  => Hash::make($request->password),
         ]);
 
+        $user->sendEmailVerificationNotification();
+
         return redirect()->route('login')
-            ->with('success', 'Pendaftaran berhasil! Silakan login dengan akun Anda.');
+            ->with('success', 'Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi, lalu login.');
     }
 }

@@ -8,16 +8,18 @@
         <p class="text-gray-500 text-sm mt-1">{{ $test->batch->name }} &middot; {{ $test->questions->count() }} soal &middot; Total: {{ $test->totalPoints() }} poin</p>
     </div>
     <div class="flex items-center gap-3 shrink-0 flex-wrap">
-        <a href="{{ route('admin.tests.edit', $test) }}" class="text-sm text-gray-500 hover:text-blue-600 border border-gray-200 px-3 py-2 rounded-lg">Edit</a>
         <span class="text-xs font-medium px-3 py-1 rounded-full {{ $test->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
             {{ $test->is_active ? 'Aktif' : 'Draft' }}
         </span>
+        @if($canManage)
+        <a href="{{ route('admin.tests.edit', $test) }}" class="text-sm text-gray-500 hover:text-blue-600 border border-gray-200 px-3 py-2 rounded-lg">Edit</a>
         <form method="POST" action="{{ route('admin.tests.toggle-active', $test) }}">
             @csrf @method('PATCH')
             <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-4 py-2 rounded-lg transition-colors">
                 {{ $test->is_active ? 'Nonaktifkan' : 'Aktifkan Test' }}
             </button>
         </form>
+        @endif
     </div>
 </div>
 
@@ -26,6 +28,11 @@
     {{-- Form Tambah Soal --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
         <h2 class="font-semibold text-gray-700 mb-4">Tambah Soal</h2>
+        @if(!$canManage)
+            <p class="text-sm text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</p>
+        @elseif($test->batch->isLocked())
+            <p class="text-sm text-gray-400 italic">Kelas ini sudah selesai/diarsipkan, tidak bisa menambah soal baru.</p>
+        @else
         <form method="POST" action="{{ route('admin.tests.questions.store', $test) }}" class="space-y-4">
             @csrf
             <div>
@@ -72,6 +79,7 @@
 
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">Tambah Soal</button>
         </form>
+        @endif
     </div>
 
     {{-- Daftar Soal --}}
@@ -98,10 +106,12 @@
                     </div>
                     @endif
                 </div>
+                @if($canManage)
                 <form method="POST" action="{{ route('admin.tests.questions.destroy', [$test, $question]) }}" onsubmit="return confirm('Hapus soal ini?')">
                     @csrf @method('DELETE')
                     <button class="text-xs text-red-400 hover:text-red-600 mt-1 shrink-0">Hapus</button>
                 </form>
+                @endif
             </div>
         </div>
         @empty

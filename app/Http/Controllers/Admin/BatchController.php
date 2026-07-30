@@ -8,6 +8,7 @@ use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class BatchController extends Controller
 {
@@ -81,9 +82,8 @@ class BatchController extends Controller
             'status'      => 'active',
         ]);
 
-        if ($request->filled('katekis_ids')) {
-            $batch->katekis()->sync($request->katekis_ids);
-        }
+        $katekisIds = collect($request->input('katekis_ids', []))->push(auth()->id())->unique();
+        $batch->katekis()->sync($katekisIds);
 
         return redirect()->route('admin.batches.show', $batch)->with('success', 'Angkatan berhasil dibuat.');
     }
@@ -91,6 +91,8 @@ class BatchController extends Controller
     public function show(Batch $batch)
     {
         $batch->load(['program', 'katekis']);
+
+        $canManage = Gate::allows('manage', $batch);
 
         $peserta  = $batch->approvedPeserta()->with('profile')->orderBy('name')->get();
         $pending  = $batch->peserta()->with('profile')->wherePivot('status', 'pending')->orderBy('name')->get();
@@ -109,12 +111,14 @@ class BatchController extends Controller
 
         return view('admin.batches.show', compact(
             'batch', 'peserta', 'pending', 'materials', 'assignments',
-            'tests', 'meetings', 'availableKatekis', 'batchMaterials'
+            'tests', 'meetings', 'availableKatekis', 'batchMaterials', 'canManage'
         ));
     }
 
     public function updateDocumentFields(Request $request, Batch $batch)
     {
+        Gate::authorize('manage', $batch);
+
         $request->validate([
             'nama_romo'        => 'nullable|string|max:255',
             'tanggal_sakramen' => 'nullable|date',
@@ -125,6 +129,8 @@ class BatchController extends Controller
 
     public function updateKelulusan(Request $request, Batch $batch, User $user)
     {
+        Gate::authorize('manage', $batch);
+
         $lulus = $request->filled('lulus') ? (bool) $request->input('lulus') : null;
         $batch->peserta()->updateExistingPivot($user->id, ['lulus' => $lulus]);
         return back();
@@ -132,12 +138,16 @@ class BatchController extends Controller
 
     public function edit(Batch $batch)
     {
+        Gate::authorize('manage', $batch);
+
         $programs = Program::where('status', 'active')->orderBy('name')->get();
         return view('admin.batches.edit', compact('batch', 'programs'));
     }
 
     public function update(Request $request, Batch $batch)
     {
+        Gate::authorize('manage', $batch);
+
         $request->validate([
             'program_id'       => 'required|exists:programs,id',
             'name'             => 'required|string|max:255',
@@ -158,6 +168,8 @@ class BatchController extends Controller
 
     public function assignKatekis(Request $request, Batch $batch)
     {
+        Gate::authorize('manage', $batch);
+
         $request->validate(['user_id' => 'required|exists:users,id']);
         $batch->katekis()->syncWithoutDetaching([$request->user_id]);
         return back()->with('success', 'Katekis berhasil ditambahkan.');
@@ -165,6 +177,8 @@ class BatchController extends Controller
 
     public function removeKatekis(Batch $batch, User $user)
     {
+        Gate::authorize('manage', $batch);
+
         $batch->katekis()->detach($user->id);
         return back()->with('success', 'Katekis berhasil dihapus dari angkatan.');
     }
@@ -173,12 +187,16 @@ class BatchController extends Controller
 
     public function removePeserta(Batch $batch, User $user)
     {
+        Gate::authorize('manage', $batch);
+
         $batch->peserta()->detach($user->id);
         return back()->with('success', 'Peserta berhasil dihapus dari angkatan.');
     }
 
     public function approvePeserta(Batch $batch, User $user)
     {
+        Gate::authorize('manage', $batch);
+
         $batch->peserta()->updateExistingPivot($user->id, [
             'status'         => 'approved',
             'rejection_note' => null,
@@ -188,6 +206,8 @@ class BatchController extends Controller
 
     public function rejectPeserta(Request $request, Batch $batch, User $user)
     {
+        Gate::authorize('manage', $batch);
+
         $request->validate(['rejection_note' => 'nullable|string|max:500']);
 
         $batch->peserta()->updateExistingPivot($user->id, [
@@ -199,14 +219,17 @@ class BatchController extends Controller
 
     public function transferPeserta(Request $request, Batch $batch, User $user)
     {
+        Gate::authorize('manage', $batch);
+
         $request->validate(['target_batch_id' => 'required|exists:batches,id|different:batch_id']);
 
         $targetBatchId = $request->target_batch_id;
+        $targetBatch = Batch::findOrFail($targetBatchId);
+        Gate::authorize('manage', $targetBatch);
 
         // Remove from current batch, add to target as approved
         $batch->peserta()->detach($user->id);
 
-        $targetBatch = Batch::findOrFail($targetBatchId);
         $targetBatch->peserta()->syncWithoutDetaching([
             $user->id => ['joined_at' => now()->toDateString(), 'status' => 'approved'],
         ]);

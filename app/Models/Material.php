@@ -3,10 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Material extends Model
 {
-    protected $fillable = ['batch_id', 'uploaded_by', 'title', 'description', 'file_path', 'file_original_name', 'video_url', 'order'];
+    protected $fillable = ['batch_id', 'uploaded_by', 'title', 'description', 'file_path', 'file_original_name', 'file_disk', 'video_url', 'order'];
+
+    public function previewUrl(): ?string
+    {
+        if (! $this->file_path) {
+            return null;
+        }
+
+        if ($this->file_disk === 'b2') {
+            return Storage::disk('b2')->temporaryUrl(
+                $this->file_path,
+                now()->addMinutes(60),
+                ['ResponseContentDisposition' => 'inline; filename="' . $this->file_original_name . '"']
+            );
+        }
+
+        return Storage::url($this->file_path);
+    }
 
     public function videoEmbedUrl(): ?string
     {

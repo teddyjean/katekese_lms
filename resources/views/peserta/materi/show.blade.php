@@ -4,7 +4,7 @@
 
 @php
     $ext           = $material->file_original_name ? strtolower(pathinfo($material->file_original_name, PATHINFO_EXTENSION)) : null;
-    $fileUrl       = $material->file_path ? Storage::url($material->file_path) : null;
+    $fileUrl       = $material->previewUrl();
     $absUrl        = $fileUrl ? asset($fileUrl) : null;
     $isImage       = in_array($ext, ['jpg', 'jpeg', 'png']);
     $isPdf         = $ext === 'pdf';

@@ -50,7 +50,7 @@ class MaterialController extends Controller
         $originalName = null;
         if ($request->hasFile('file')) {
             $file = $request->file('file');
-            $path = $file->store('materials', 'public');
+            $path = $file->store('materials', 'b2');
             $originalName = $file->getClientOriginalName();
         }
 
@@ -63,6 +63,7 @@ class MaterialController extends Controller
             'description'        => $request->description,
             'file_path'          => $path,
             'file_original_name' => $originalName,
+            'file_disk'          => $path ? 'b2' : 'public',
             'video_url'          => $request->video_url,
             'order'              => $lastOrder + 1,
         ]);
@@ -113,10 +114,13 @@ class MaterialController extends Controller
         ];
 
         if ($request->hasFile('file')) {
-            Storage::disk('public')->delete($material->file_path);
+            if ($material->file_path) {
+                Storage::disk($material->file_disk)->delete($material->file_path);
+            }
             $file = $request->file('file');
-            $data['file_path'] = $file->store('materials', 'public');
+            $data['file_path'] = $file->store('materials', 'b2');
             $data['file_original_name'] = $file->getClientOriginalName();
+            $data['file_disk'] = 'b2';
         }
 
         $material->update($data);
@@ -128,7 +132,9 @@ class MaterialController extends Controller
     {
         Gate::authorize('manage', $material->batch);
 
-        Storage::disk('public')->delete($material->file_path);
+        if ($material->file_path) {
+            Storage::disk($material->file_disk)->delete($material->file_path);
+        }
         $material->delete();
         return back()->with('success', 'Materi berhasil dihapus.');
     }

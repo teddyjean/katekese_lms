@@ -103,6 +103,7 @@ class BatchController extends Controller
 
         $availableKatekis = User::where('role', 'katekis')
             ->where('is_active', true)
+            ->whereHas('programs', fn ($q) => $q->where('programs.id', $batch->program_id))
             ->whereDoesntHave('batchesAsKatekis', fn ($q) => $q->where('batch_id', $batch->id))
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -178,6 +179,10 @@ class BatchController extends Controller
     public function removeKatekis(Batch $batch, User $user)
     {
         Gate::authorize('manage', $batch);
+
+        if ($batch->katekis()->count() <= 1) {
+            return back()->with('error', 'Kelas harus memiliki minimal 1 katekis pengajar.');
+        }
 
         $batch->katekis()->detach($user->id);
         return back()->with('success', 'Katekis berhasil dihapus dari angkatan.');

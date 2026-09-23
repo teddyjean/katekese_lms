@@ -2,7 +2,7 @@
 @section('title', 'Hasil Test')
 @section('content')
 <div class="mb-6">
-    <a href="{{ route('peserta.test.index') }}" class="text-sm text-gray-500 hover:text-blue-600">&larr; Kembali</a>
+    <a href="{{ route('peserta.test.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-full px-4 py-1.5 transition-colors">&larr; Kembali</a>
     <h1 class="text-2xl font-bold text-gray-800 mt-2">{{ $test->title }}</h1>
     <p class="text-gray-500 text-sm mt-1">Hasil Test</p>
 </div>

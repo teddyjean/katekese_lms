@@ -5,7 +5,9 @@
       "Bash(php artisan *)",
       "Bash(php -l app/Http/Controllers/Admin/BatchController.php)",
       "Bash(php -l app/Models/User.php)",
-      "Bash(php -l app/Policies/BatchPolicy.php)"
+      "Bash(php -l app/Policies/BatchPolicy.php)",
+      "Bash(php \"C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--katekese-lms\\\\49bae046-94ef-4cad-bba4-2cdca6ab8d75\\\\scratchpad\\\\md_to_html.php\" \"docs/panduan-katekis.md\" \"C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--katekese-lms\\\\49bae046-94ef-4cad-bba4-2cdca6ab8d75\\\\scratchpad\\\\panduan-katekis.html\" \"Panduan Katekis - SMPSI Paroki Kalasan\")",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless --disable-gpu --no-pdf-header-footer '--print-to-pdf=C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--katekese-lms\\\\49bae046-94ef-4cad-bba4-2cdca6ab8d75\\\\scratchpad/panduan-katekis.pdf' 'file:///C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--katekese-lms\\\\49bae046-94ef-4cad-bba4-2cdca6ab8d75\\\\scratchpad/panduan-katekis.html')"
     ]
   }
 }

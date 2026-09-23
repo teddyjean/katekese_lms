@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="mb-6">
-    <a href="{{ route('admin.batches.show', $batch) }}" class="text-sm text-gray-500 hover:text-blue-600">&larr; Kembali</a>
+    <a href="{{ route('admin.batches.show', $batch) }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-full px-4 py-1.5 transition-colors">&larr; Kembali</a>
     <h1 class="text-2xl font-bold text-gray-800 mt-2">Edit Angkatan</h1>
 </div>
 

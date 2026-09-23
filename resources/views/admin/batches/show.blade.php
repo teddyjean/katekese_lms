@@ -6,7 +6,7 @@
 {{-- Header --}}
 <div class="print:hidden mb-5 flex items-center justify-between flex-wrap gap-3">
     <div>
-        <a href="{{ route('admin.batches.index') }}" class="text-sm text-gray-500 hover:text-blue-600">&larr; Kembali ke Kelas</a>
+        <a href="{{ route('admin.batches.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-full px-4 py-1.5 transition-colors">&larr; Kembali ke Kelas</a>
         <h1 class="text-xl font-bold text-gray-800 mt-1">{{ $batch->name }}</h1>
         <p class="text-sm text-gray-500">{{ $batch->program->name }}
             &middot; {{ $batch->katekis->pluck('name')->join(', ') ?: '-' }}
@@ -30,6 +30,48 @@
     {{ session('success') }}
 </div>
 @endif
+
+{{-- Katekis Pengajar --}}
+<div class="print:hidden bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">Katekis Pengajar</h3>
+    <div class="flex flex-wrap gap-2 mb-3">
+        @forelse($batch->katekis as $k)
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-50 text-blue-700 pl-2.5 pr-1.5 py-1 rounded-full">
+            {{ $k->name }}
+            @if($canManage && $batch->katekis->count() > 1)
+            <form method="POST" action="{{ route('admin.batches.katekis.remove', [$batch, $k]) }}"
+                  onsubmit="return confirm('Hapus {{ $k->name }} dari kelas ini?')">
+                @csrf @method('DELETE')
+                <button type="submit" class="w-4 h-4 inline-flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-100 hover:text-red-500 transition-colors" title="Hapus dari kelas">&times;</button>
+            </form>
+            @endif
+        </span>
+        @empty
+        <span class="text-xs text-gray-400 italic">Belum ada katekis.</span>
+        @endforelse
+    </div>
+
+    @if($canManage)
+        @if($availableKatekis->isEmpty())
+        <p class="text-xs text-gray-400 italic">Tidak ada katekis lain yang terdaftar untuk program ini.</p>
+        @else
+        <form method="POST" action="{{ route('admin.batches.katekis.assign', $batch) }}" class="flex gap-2 max-w-md">
+            @csrf
+            <select name="user_id" required
+                    class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <option value="">-- Pilih Katekis --</option>
+                @foreach($availableKatekis as $k)
+                    <option value="{{ $k->id }}">{{ $k->name }}</option>
+                @endforeach
+            </select>
+            <button type="submit"
+                    class="text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors shrink-0">
+                + Tambah
+            </button>
+        </form>
+        @endif
+    @endif
+</div>
 
 {{-- Tab Nav --}}
 <div class="print:hidden mb-6">

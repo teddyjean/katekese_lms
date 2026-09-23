@@ -93,12 +93,18 @@
                     <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $statusColor }}">{{ $statusLabel }}</span>
                 </td>
                 <td class="px-5 py-3.5">
+                    @php
+                        $canManageBatch = auth()->user()->teachesBatch($batch) && $batch->status !== 'completed';
+                    @endphp
                     <div class="flex items-center gap-1.5">
                         <a href="{{ route('admin.batches.show', $batch) }}"
-                           class="text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 px-2.5 py-1 rounded-lg transition-colors">
-                            {{ auth()->user()->teachesBatch($batch) ? 'Kelola' : 'Lihat' }}
+                           class="text-xs font-medium px-2.5 py-1 rounded-lg transition-colors
+                               {{ $canManageBatch
+                                   ? 'bg-violet-50 text-violet-700 hover:bg-violet-100'
+                                   : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }}">
+                            {{ $canManageBatch ? 'Kelola' : 'Lihat' }}
                         </a>
-                        @if(auth()->user()->teachesBatch($batch))
+                        @if($canManageBatch)
                         <a href="{{ route('admin.batches.edit', $batch) }}"
                            class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
                             Edit

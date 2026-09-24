@@ -13,7 +13,8 @@
         {{-- Logo --}}
         <div class="text-center mb-8">
             <img src="{{ asset('img/LOGO PAROKI-WARNA.png') }}" alt="Logo Paroki" class="w-20 h-20 object-contain mx-auto mb-4 drop-shadow-lg">
-            <h1 class="text-xl font-bold text-white">SMPSI</h1>
+            <p class="text-slate-500 text-xs font-semibold tracking-widest uppercase mb-1">SMPSI</p>
+            <h1 class="text-lg sm:text-xl font-bold text-white leading-snug px-2">Sistem Manajemen Pembelajaran Sakramen Inisiasi</h1>
             <p class="text-slate-400 text-sm mt-1">Paroki Maria Marganingsih Kalasan</p>
         </div>
 

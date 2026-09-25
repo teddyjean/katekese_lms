@@ -1,0 +1,244 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Batch;
+use App\Models\Program;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+
+class BatchController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Batch::with('program')->withCount(['katekis', 'peserta']);
+
+        if ($request->boolean('mine')) {
+            $query->whereHas('katekis', fn ($q) => $q->where('users.id', auth()->id()));
+        }
+
+        if ($request->filled('program_id')) {
+            $query->where('program_id', $request->program_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('start_date', $request->year);
+        }
+
+        $batches = $query->orderByDesc('start_date')->paginate(15)->withQueryString();
+
+        $yearExpr = DB::getDriverName() === 'sqlite' ? "strftime('%Y', start_date)" : "YEAR(start_date)";
+        $yearsQuery = Batch::selectRaw("{$yearExpr} as year")
+            ->whereNotNull('start_date')
+            ->when($request->filled('program_id'), fn ($q) => $q->where('program_id', $request->program_id))
+            ->groupBy('year')
+            ->orderByDesc('year')
+            ->pluck('year');
+
+        return view('admin.batches.index', compact('batches', 'yearsQuery'));
+    }
+
+    public function create()
+    {
+        $programs = Program::where('status', 'active')->orderBy('name')->get();
+
+        $katekisByProgram = $programs->mapWithKeys(fn ($program) => [
+            $program->id => $program->katekis()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['users.id', 'users.name'])
+                ->map(fn ($k) => ['id' => $k->id, 'name' => $k->name])
+                ->values(),
+        ]);
+
+        return view('admin.batches.create', compact('programs', 'katekisByProgram'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'program_id'  => 'required|exists:programs,id',
+            'name'        => 'required|string|max:255',
+            'start_date'  => 'nullable|date',
+            'end_date'    => 'nullable|date|after_or_equal:start_date',
+            'description' => 'nullable|string',
+            'katekis_ids' => 'nullable|array',
+            'katekis_ids.*' => 'exists:users,id',
+        ]);
+
+        $batch = Batch::create([
+            'program_id'  => $request->program_id,
+            'name'        => $request->name,
+            'start_date'  => $request->start_date,
+            'end_date'    => $request->end_date,
+            'description' => $request->description,
+            'status'      => 'active',
+        ]);
+
+        $katekisIds = collect($request->input('katekis_ids', []))->push(auth()->id())->unique();
+        $batch->katekis()->sync($katekisIds);
+
+        return redirect()->route('admin.batches.show', $batch)->with('success', 'Angkatan berhasil dibuat.');
+    }
+
+    public function show(Batch $batch)
+    {
+        $batch->load(['program', 'katekis']);
+
+        $canManage = Gate::allows('manage', $batch);
+
+        $peserta  = $batch->approvedPeserta()->with('profile')->orderBy('name')->get();
+        $pending  = $batch->peserta()->with('profile')->wherePivot('status', 'pending')->orderBy('name')->get();
+        $materials = $batch->materials()->orderBy('order')->get();
+        $assignments = $batch->assignments()->orderByDesc('deadline')->get();
+        $tests    = $batch->tests()->withCount('questions')->orderByDesc('id')->get();
+        $meetings = $batch->meetings()->with(['attendances'])->orderBy('scheduled_at')->get();
+
+        $availableKatekis = User::where('role', 'katekis')
+            ->where('is_active', true)
+            ->whereHas('programs', fn ($q) => $q->where('programs.id', $batch->program_id))
+            ->whereDoesntHave('batchesAsKatekis', fn ($q) => $q->where('batch_id', $batch->id))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $batchMaterials = $materials;
+
+        return view('admin.batches.show', compact(
+            'batch', 'peserta', 'pending', 'materials', 'assignments',
+            'tests', 'meetings', 'availableKatekis', 'batchMaterials', 'canManage'
+        ));
+    }
+
+    public function updateDocumentFields(Request $request, Batch $batch)
+    {
+        Gate::authorize('manage', $batch);
+
+        $request->validate([
+            'nama_romo'        => 'nullable|string|max:255',
+            'tanggal_sakramen' => 'nullable|date',
+        ]);
+        $batch->update($request->only('nama_romo', 'tanggal_sakramen'));
+        return back()->with('success', 'Data dokumen disimpan.');
+    }
+
+    public function updateKelulusan(Request $request, Batch $batch, User $user)
+    {
+        Gate::authorize('manage', $batch);
+
+        $lulus = $request->filled('lulus') ? (bool) $request->input('lulus') : null;
+        $batch->peserta()->updateExistingPivot($user->id, ['lulus' => $lulus]);
+        return back();
+    }
+
+    public function edit(Batch $batch)
+    {
+        Gate::authorize('manage', $batch);
+
+        $programs = Program::where('status', 'active')->orderBy('name')->get();
+        return view('admin.batches.edit', compact('batch', 'programs'));
+    }
+
+    public function update(Request $request, Batch $batch)
+    {
+        Gate::authorize('manage', $batch);
+
+        $request->validate([
+            'program_id'       => 'required|exists:programs,id',
+            'name'             => 'required|string|max:255',
+            'start_date'       => 'nullable|date',
+            'end_date'         => 'nullable|date|after_or_equal:start_date',
+            'description'      => 'nullable|string',
+            'status'           => 'required|in:active,completed,archived',
+            'nama_romo'        => 'nullable|string|max:255',
+            'tanggal_sakramen' => 'nullable|date',
+        ]);
+
+        $batch->update($request->only('program_id', 'name', 'start_date', 'end_date', 'description', 'status', 'nama_romo', 'tanggal_sakramen'));
+
+        return redirect()->route('admin.batches.show', $batch)->with('success', 'Angkatan berhasil diperbarui.');
+    }
+
+    // ── Katekis ──────────────────────────────────────────────────────────────
+
+    public function assignKatekis(Request $request, Batch $batch)
+    {
+        Gate::authorize('manage', $batch);
+
+        $request->validate(['user_id' => 'required|exists:users,id']);
+        $batch->katekis()->syncWithoutDetaching([$request->user_id]);
+        return back()->with('success', 'Katekis berhasil ditambahkan.');
+    }
+
+    public function removeKatekis(Batch $batch, User $user)
+    {
+        Gate::authorize('manage', $batch);
+
+        if ($batch->katekis()->count() <= 1) {
+            return back()->with('error', 'Kelas harus memiliki minimal 1 katekis pengajar.');
+        }
+
+        $batch->katekis()->detach($user->id);
+        return back()->with('success', 'Katekis berhasil dihapus dari angkatan.');
+    }
+
+    // ── Peserta Enrollment ───────────────────────────────────────────────────
+
+    public function removePeserta(Batch $batch, User $user)
+    {
+        Gate::authorize('manage', $batch);
+
+        $batch->peserta()->detach($user->id);
+        return back()->with('success', 'Peserta berhasil dihapus dari angkatan.');
+    }
+
+    public function approvePeserta(Batch $batch, User $user)
+    {
+        Gate::authorize('manage', $batch);
+
+        $batch->peserta()->updateExistingPivot($user->id, [
+            'status'         => 'approved',
+            'rejection_note' => null,
+        ]);
+        return back()->with('success', "{$user->name} berhasil diterima di kelas {$batch->name}.");
+    }
+
+    public function rejectPeserta(Request $request, Batch $batch, User $user)
+    {
+        Gate::authorize('manage', $batch);
+
+        $request->validate(['rejection_note' => 'nullable|string|max:500']);
+
+        $batch->peserta()->updateExistingPivot($user->id, [
+            'status'         => 'rejected',
+            'rejection_note' => $request->rejection_note,
+        ]);
+        return back()->with('success', "Pendaftaran {$user->name} telah ditolak.");
+    }
+
+    public function transferPeserta(Request $request, Batch $batch, User $user)
+    {
+        Gate::authorize('manage', $batch);
+
+        $request->validate(['target_batch_id' => 'required|exists:batches,id|different:batch_id']);
+
+        $targetBatchId = $request->target_batch_id;
+        $targetBatch = Batch::findOrFail($targetBatchId);
+        Gate::authorize('manage', $targetBatch);
+
+        // Remove from current batch, add to target as approved
+        $batch->peserta()->detach($user->id);
+
+        $targetBatch->peserta()->syncWithoutDetaching([
+            $user->id => ['joined_at' => now()->toDateString(), 'status' => 'approved'],
+        ]);
+
+        return back()->with('success', "{$user->name} berhasil dimutasi ke kelas {$targetBatch->name}.");
+    }
+}

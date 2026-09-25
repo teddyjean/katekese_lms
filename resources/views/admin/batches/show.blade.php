@@ -1,0 +1,662 @@
+@extends('layouts.app')
+@section('title', $batch->name)
+
+@section('content')
+
+{{-- Header --}}
+<div class="print:hidden mb-5 flex items-center justify-between flex-wrap gap-3">
+    <div>
+        <a href="{{ route('admin.batches.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-full px-4 py-1.5 transition-colors">&larr; Kembali ke Kelas</a>
+        <h1 class="text-xl font-bold text-gray-800 mt-1">{{ $batch->name }}</h1>
+        <p class="text-sm text-gray-500">{{ $batch->program->name }}
+            &middot; {{ $batch->katekis->pluck('name')->join(', ') ?: '-' }}
+            &middot; <span class="capitalize">{{ $batch->status }}</span>
+        </p>
+    </div>
+    <div class="flex gap-2">
+        @if($canManage)
+        <a href="{{ route('admin.batches.edit', $batch) }}"
+           class="text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl transition-colors shadow-sm">
+            Edit Kelas
+        </a>
+        @else
+        <span class="text-xs text-gray-400 italic px-2 py-2">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @endif
+    </div>
+</div>
+
+@if(session('success'))
+<div class="print:hidden mb-4 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
+    {{ session('success') }}
+</div>
+@endif
+
+{{-- Katekis Pengajar --}}
+<div class="print:hidden bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">Katekis Pengajar</h3>
+    <div class="flex flex-wrap gap-2 mb-3">
+        @forelse($batch->katekis as $k)
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-50 text-blue-700 pl-2.5 pr-1.5 py-1 rounded-full">
+            {{ $k->name }}
+            @if($canManage && $batch->katekis->count() > 1)
+            <form method="POST" action="{{ route('admin.batches.katekis.remove', [$batch, $k]) }}"
+                  onsubmit="return confirm('Hapus {{ $k->name }} dari kelas ini?')">
+                @csrf @method('DELETE')
+                <button type="submit" class="w-4 h-4 inline-flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-100 hover:text-red-500 transition-colors" title="Hapus dari kelas">&times;</button>
+            </form>
+            @endif
+        </span>
+        @empty
+        <span class="text-xs text-gray-400 italic">Belum ada katekis.</span>
+        @endforelse
+    </div>
+
+    @if($canManage)
+        @if($availableKatekis->isEmpty())
+        <p class="text-xs text-gray-400 italic">Tidak ada katekis lain yang terdaftar untuk program ini.</p>
+        @else
+        <form method="POST" action="{{ route('admin.batches.katekis.assign', $batch) }}" class="flex gap-2 max-w-md">
+            @csrf
+            <select name="user_id" required
+                    class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <option value="">-- Pilih Katekis --</option>
+                @foreach($availableKatekis as $k)
+                    <option value="{{ $k->id }}">{{ $k->name }}</option>
+                @endforeach
+            </select>
+            <button type="submit"
+                    class="text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors shrink-0">
+                + Tambah
+            </button>
+        </form>
+        @endif
+    @endif
+</div>
+
+{{-- Tab Nav --}}
+<div class="print:hidden mb-6">
+    <nav class="flex gap-1.5 overflow-x-auto pb-px" id="tab-nav">
+        @php
+            $tabs = [
+                'peserta'    => ['label' => 'Peserta', 'count' => $peserta->count(), 'active' => 'bg-blue-600 text-white shadow-sm', 'inactive' => 'bg-blue-50 text-blue-700 hover:bg-blue-100', 'badge' => 'bg-white/80 text-blue-700'],
+                'materi'     => ['label' => 'Materi', 'count' => $materials->count(), 'active' => 'bg-emerald-600 text-white shadow-sm', 'inactive' => 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100', 'badge' => 'bg-white/80 text-emerald-700'],
+                'tugas'      => ['label' => 'Tugas', 'count' => $assignments->count(), 'active' => 'bg-amber-500 text-white shadow-sm', 'inactive' => 'bg-amber-50 text-amber-700 hover:bg-amber-100', 'badge' => 'bg-white/80 text-amber-700'],
+                'test'       => ['label' => 'Test', 'count' => $tests->count(), 'active' => 'bg-purple-600 text-white shadow-sm', 'inactive' => 'bg-purple-50 text-purple-700 hover:bg-purple-100', 'badge' => 'bg-white/80 text-purple-700'],
+                'pertemuan'  => ['label' => 'Pertemuan', 'count' => $meetings->count(), 'active' => 'bg-cyan-600 text-white shadow-sm', 'inactive' => 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100', 'badge' => 'bg-white/80 text-cyan-700'],
+                'dokumen'    => ['label' => 'Dokumen', 'count' => null, 'active' => 'bg-rose-600 text-white shadow-sm', 'inactive' => 'bg-rose-50 text-rose-700 hover:bg-rose-100', 'badge' => 'bg-white/80 text-rose-700'],
+            ];
+        @endphp
+        @foreach($tabs as $key => $tab)
+        <button type="button" data-tab="{{ $key }}" data-active-class="{{ $tab['active'] }}" data-inactive-class="{{ $tab['inactive'] }}"
+                class="tab-btn whitespace-nowrap px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors {{ $tab['inactive'] }}">
+            {{ $tab['label'] }}
+            @if($tab['count'] !== null)
+                <span class="ml-1 text-xs {{ $tab['badge'] }} px-1.5 py-0.5 rounded-full">{{ $tab['count'] }}</span>
+            @endif
+        </button>
+        @endforeach
+    </nav>
+    <div class="border-b border-gray-200"></div>
+</div>
+
+{{-- ── TAB: PESERTA ─────────────────────────────────────────────────────── --}}
+<div id="tab-peserta" class="tab-panel print:hidden">
+
+    {{-- Pending --}}
+    @if($pending->count())
+    <div class="mb-6">
+        <h3 class="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">{{ $pending->count() }}</span>
+            Menunggu Persetujuan
+        </h3>
+        <div class="space-y-4">
+            @foreach($pending as $p)
+            @php $warning = $batch->eligibilityWarningFor($p); @endphp
+            <div class="bg-white border border-amber-200 rounded-xl overflow-hidden shadow-sm">
+                {{-- Header --}}
+                <div class="flex items-center justify-between gap-3 px-5 py-3 bg-amber-50 border-b border-amber-100">
+                    <div>
+                        <p class="font-semibold text-gray-800 text-sm">{{ $p->name }}</p>
+                        <p class="text-xs text-gray-500">{{ $p->email }} @if($p->phone) &middot; {{ $p->phone }} @endif</p>
+                    </div>
+                    <span class="text-xs text-amber-600 font-medium shrink-0">Mendaftar {{ $p->pivot->joined_at ? \Carbon\Carbon::parse($p->pivot->joined_at)->format('d M Y') : '-' }}</span>
+                </div>
+
+                {{-- Profil --}}
+                <div class="px-5 py-4">
+                    @if($p->profile)
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm mb-4">
+
+                        <div>
+                            <p class="text-xs text-gray-400">Tanggal Lahir</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->tanggal_lahir?->format('d M Y') ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Sekolah</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->sekolah ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Kelas</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->kelas ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Wilayah</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->wilayah ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Lingkungan</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->lingkungan ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Nama Ayah</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->nama_ayah ?: '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Nama Ibu</p>
+                            <p class="font-medium text-gray-700">{{ $p->profile->nama_ibu ?: '-' }}</p>
+                        </div>
+
+                        <div class="col-span-2 sm:col-span-3 border-t border-gray-100 pt-3 mt-1">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Data Sakramen</p>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
+                                <div>
+                                    <p class="text-xs text-gray-400">Nama Baptis</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->nama_baptis ?: '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Gereja Baptis</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->gereja_baptis ?: '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">No. Surat Baptis</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->nomor_buku_baptis ?: '-' }}</p>
+                                </div>
+                                <div class="col-span-2 sm:col-span-3">
+                                    <p class="text-xs text-gray-400">Gereja Komuni Pertama</p>
+                                    <p class="font-medium text-gray-700">{{ $p->profile->gereja_komuni_pertama ?: '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    <p class="text-xs text-gray-400 italic mb-4">Siswa belum mengisi profil.</p>
+                    @endif
+
+                    {{-- Warning eligibilitas --}}
+                    @if($warning)
+                    <div class="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 mb-4 text-xs text-amber-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                        </svg>
+                        <span>{{ $warning }}</span>
+                    </div>
+                    @endif
+
+                    {{-- Aksi --}}
+                    @if($canManage)
+                    <div class="flex flex-wrap items-start gap-3 pt-1">
+                        <form method="POST" action="{{ route('admin.batches.peserta.approve', [$batch, $p]) }}">
+                            @csrf
+                            <button class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">
+                                Terima
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ route('admin.batches.peserta.reject', [$batch, $p]) }}" class="flex-1 min-w-[220px]">
+                            @csrf
+                            <div class="flex gap-2">
+                                <input type="text" name="rejection_note"
+                                       placeholder="Alasan penolakan (opsional)"
+                                       class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-red-200">
+                                <button class="text-sm bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition-colors shrink-0">
+                                    Tolak
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    @else
+                    <p class="text-xs text-gray-400 italic pt-1">Anda tidak mengajar kelas ini &mdash; tidak bisa memproses pendaftaran.</p>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Peserta List --}}
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <h3 class="text-sm font-semibold text-gray-700">Peserta Terdaftar</h3>
+        </div>
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left px-4 py-2.5 font-medium text-gray-600 w-8">No</th>
+                    <th class="text-left px-4 py-2.5 font-medium text-gray-600">Nama</th>
+                    <th class="text-left px-4 py-2.5 font-medium text-gray-600 hidden sm:table-cell">Wilayah</th>
+                    <th class="text-left px-4 py-2.5 font-medium text-gray-600 hidden sm:table-cell">Lingkungan</th>
+                    <th class="text-left px-4 py-2.5 font-medium text-gray-600">Kelulusan</th>
+                    <th class="px-4 py-2.5"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @forelse($peserta as $i => $p)
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2.5 text-gray-400">{{ $i + 1 }}</td>
+                    <td class="px-4 py-2.5 font-medium text-gray-800">{{ $p->name }}</td>
+                    <td class="px-4 py-2.5 text-gray-500 hidden sm:table-cell">{{ $p->profile?->wilayah ?? '-' }}</td>
+                    <td class="px-4 py-2.5 text-gray-500 hidden sm:table-cell">{{ $p->profile?->lingkungan ?? '-' }}</td>
+                    <td class="px-4 py-2.5">
+                        @if($canManage)
+                        <form method="POST" action="{{ route('admin.batches.peserta.kelulusan', [$batch, $p]) }}">
+                            @csrf @method('PATCH')
+                            <select name="lulus" onchange="this.form.submit()"
+                                    class="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-300
+                                        {{ $p->pivot->lulus === true ? 'bg-emerald-50 text-emerald-700' : ($p->pivot->lulus === false ? 'bg-red-50 text-red-700' : 'text-gray-400') }}">
+                                <option value="" @selected($p->pivot->lulus === null)>— Belum</option>
+                                <option value="1" @selected($p->pivot->lulus === true)>Lulus</option>
+                                <option value="0" @selected($p->pivot->lulus === false)>Tidak Lulus</option>
+                            </select>
+                        </form>
+                        @else
+                        <span class="text-xs {{ $p->pivot->lulus === true ? 'text-emerald-700' : ($p->pivot->lulus === false ? 'text-red-700' : 'text-gray-400') }}">
+                            {{ $p->pivot->lulus === true ? 'Lulus' : ($p->pivot->lulus === false ? 'Tidak Lulus' : '— Belum') }}
+                        </span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-2.5 text-right">
+                        @if($canManage)
+                        <form method="POST" action="{{ route('admin.batches.peserta.remove', [$batch, $p]) }}"
+                              onsubmit="return confirm('Hapus {{ $p->name }} dari kelas ini?')">
+                            @csrf @method('DELETE')
+                            <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                        </form>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Belum ada peserta.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{{-- ── TAB: MATERI ──────────────────────────────────────────────────────── --}}
+<div id="tab-materi" class="tab-panel print:hidden hidden">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-semibold text-gray-700">Materi Kelas</h3>
+        @if(!$canManage)
+            <span class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @elseif($batch->isLocked())
+            <span class="text-xs text-gray-400 italic">Kelas sudah selesai, tidak bisa menambah materi.</span>
+        @else
+            <a href="{{ route('admin.materials.create') }}?batch_id={{ $batch->id }}"
+               class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Tambah Materi</a>
+        @endif
+    </div>
+    <div class="space-y-3">
+        @forelse($materials as $m)
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <span class="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-1 rounded-lg w-8 text-center">{{ $m->order }}</span>
+                <div>
+                    <a href="{{ route('admin.materials.show', $m) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm">{{ $m->title }}</a>
+                    @if($m->description)
+                        <p class="text-xs text-gray-400 mt-0.5">{{ Str::limit($m->description, 80) }}</p>
+                    @endif
+                </div>
+            </div>
+            @if($canManage)
+            <div class="flex gap-2 shrink-0">
+                <a href="{{ route('admin.materials.edit', $m) }}" class="text-xs text-gray-500 hover:text-blue-600">Edit</a>
+                <form method="POST" action="{{ route('admin.materials.destroy', $m) }}"
+                      onsubmit="return confirm('Hapus materi ini?')">
+                    @csrf @method('DELETE')
+                    <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                </form>
+            </div>
+            @endif
+        </div>
+        @empty
+        <div class="text-center py-10 text-gray-400 text-sm">Belum ada materi. Klik "+ Tambah Materi" untuk mulai.</div>
+        @endforelse
+    </div>
+</div>
+
+{{-- ── TAB: TUGAS ───────────────────────────────────────────────────────── --}}
+<div id="tab-tugas" class="tab-panel print:hidden hidden">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-semibold text-gray-700">Tugas</h3>
+        @if(!$canManage)
+            <span class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @elseif($batch->isLocked())
+            <span class="text-xs text-gray-400 italic">Kelas sudah selesai, tidak bisa membuat tugas.</span>
+        @else
+            <a href="{{ route('admin.assignments.create') }}?batch_id={{ $batch->id }}"
+               class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Buat Tugas</a>
+        @endif
+    </div>
+    <div class="space-y-3">
+        @forelse($assignments as $a)
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between gap-3">
+            <div>
+                <a href="{{ route('admin.assignments.show', $a) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm">{{ $a->title }}</a>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    Deadline: {{ $a->deadline ? $a->deadline->translatedFormat('d M Y') : '-' }}
+                    &middot; Nilai max: {{ $a->max_score }}
+                </p>
+            </div>
+            <div class="flex gap-2 shrink-0">
+                <a href="{{ route('admin.assignments.show', $a) }}" class="text-xs text-gray-500 hover:text-blue-600">Nilai</a>
+                @if($canManage)
+                <a href="{{ route('admin.assignments.edit', $a) }}" class="text-xs text-gray-500 hover:text-blue-600">Edit</a>
+                <form method="POST" action="{{ route('admin.assignments.destroy', $a) }}"
+                      onsubmit="return confirm('Hapus tugas ini?')">
+                    @csrf @method('DELETE')
+                    <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                </form>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="text-center py-10 text-gray-400 text-sm">Belum ada tugas.</div>
+        @endforelse
+    </div>
+</div>
+
+{{-- ── TAB: TEST ────────────────────────────────────────────────────────── --}}
+<div id="tab-test" class="tab-panel print:hidden hidden">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-semibold text-gray-700">Test / Kuis</h3>
+        @if(!$canManage)
+            <span class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
+        @elseif($batch->isLocked())
+            <span class="text-xs text-gray-400 italic">Kelas sudah selesai, tidak bisa membuat test.</span>
+        @else
+            <a href="{{ route('admin.tests.create') }}?batch_id={{ $batch->id }}"
+               class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">+ Buat Test</a>
+        @endif
+    </div>
+    <div class="space-y-3">
+        @forelse($tests as $t)
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between gap-3">
+            <div>
+                <a href="{{ route('admin.tests.show', $t) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm">{{ $t->title }}</a>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ $t->questions_count }} soal
+                    @if($t->duration_minutes) &middot; {{ $t->duration_minutes }} menit @endif
+                    &middot;
+                    <span class="{{ $t->is_active ? 'text-emerald-600' : 'text-gray-400' }}">
+                        {{ $t->is_active ? 'Aktif' : 'Nonaktif' }}
+                    </span>
+                </p>
+            </div>
+            @if($canManage)
+            <div class="flex gap-2 shrink-0">
+                <form method="POST" action="{{ route('admin.tests.toggle-active', $t) }}">
+                    @csrf @method('PATCH')
+                    <button class="text-xs {{ $t->is_active ? 'text-amber-500 hover:text-amber-700' : 'text-emerald-600 hover:text-emerald-700' }}">
+                        {{ $t->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                    </button>
+                </form>
+                <a href="{{ route('admin.tests.edit', $t) }}" class="text-xs text-gray-500 hover:text-blue-600">Edit</a>
+                <form method="POST" action="{{ route('admin.tests.destroy', $t) }}"
+                      onsubmit="return confirm('Hapus test ini?')">
+                    @csrf @method('DELETE')
+                    <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                </form>
+            </div>
+            @endif
+        </div>
+        @empty
+        <div class="text-center py-10 text-gray-400 text-sm">Belum ada test.</div>
+        @endforelse
+    </div>
+</div>
+
+{{-- ── TAB: PERTEMUAN ───────────────────────────────────────────────────── --}}
+<div id="tab-pertemuan" class="tab-panel print:hidden hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- Form Tambah Pertemuan --}}
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Jadwalkan Pertemuan</h3>
+            @if($canManage)
+            <form method="POST" action="{{ route('admin.meetings.store', $batch) }}" class="space-y-3">
+                @csrf
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Tanggal</label>
+                    <input type="date" name="tanggal" required
+                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Jam</label>
+                    <input type="time" name="jam" required
+                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Lokasi</label>
+                    <input type="text" name="location" placeholder="cth. Aula Paroki"
+                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Materi Terkait</label>
+                    <select name="material_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        <option value="">-- Pilih Materi --</option>
+                        @foreach($batchMaterials as $m)
+                            <option value="{{ $m->id }}">{{ $m->title }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded-lg">
+                    Tambah Pertemuan
+                </button>
+            </form>
+            @else
+            <p class="text-xs text-gray-400 italic">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</p>
+            @endif
+        </div>
+
+        {{-- List Pertemuan --}}
+        <div class="lg:col-span-2 space-y-3">
+            @forelse($meetings as $meeting)
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="font-medium text-gray-800 text-sm">{{ $meeting->title }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ $meeting->scheduled_at->translatedFormat('d M Y, H:i') }}
+                            @if($meeting->location) &middot; {{ $meeting->location }} @endif
+                        </p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ $meeting->attendances->count() }} presensi tercatat
+                        </p>
+                    </div>
+                    @if($canManage)
+                    <div class="flex gap-2 shrink-0">
+                        <a href="{{ route('admin.meetings.attendance.edit', $meeting) }}"
+                           class="text-xs text-blue-600 hover:text-blue-700">Presensi</a>
+                        <form method="POST" action="{{ route('admin.meetings.destroy', $meeting) }}"
+                              onsubmit="return confirm('Hapus pertemuan ini?')">
+                            @csrf @method('DELETE')
+                            <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @empty
+            <div class="text-center py-10 text-gray-400 text-sm">Belum ada jadwal pertemuan.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
+{{-- ── TAB: DOKUMEN ─────────────────────────────────────────────────────── --}}
+<div id="tab-dokumen" class="tab-panel hidden">
+
+    @if($batch->status === 'completed' && $canManage)
+    <form method="POST" action="{{ route('admin.batches.update-document', $batch) }}"
+          class="print:hidden mb-5 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-wrap gap-4 items-end text-sm">
+        @csrf @method('PATCH')
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-medium text-amber-700 mb-1">Nama Romo Paroki</label>
+            <input type="text" name="nama_romo" value="{{ $batch->nama_romo }}"
+                   placeholder="cth. Rm. Yohanes Budi, Pr"
+                   class="w-full border border-amber-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-white">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-amber-700 mb-1">Tanggal Penerimaan Sakramen</label>
+            <input type="date" name="tanggal_sakramen" value="{{ $batch->tanggal_sakramen?->format('Y-m-d') }}"
+                   class="border border-amber-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-white">
+        </div>
+        <button type="submit"
+                class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors">
+            Simpan
+        </button>
+    </form>
+    @endif
+
+    <div class="print:hidden mb-3 text-right">
+        <button onclick="window.print()"
+                class="text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors shadow-sm">
+            Cetak Dokumen
+        </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12 max-w-4xl mx-auto print:shadow-none print:border-none print:rounded-none print:p-0 print:max-w-none">
+        <div class="flex items-center gap-5 pb-4 border-b-4 border-double border-gray-800 mb-6">
+            <img src="{{ asset('img/LOGO PAROKI-WARNA.png') }}" alt="Logo Paroki" class="w-16 h-16 object-contain shrink-0">
+            <div class="flex-1 text-center">
+                <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">Keuskupan Agung Semarang</p>
+                <h1 class="text-xl font-bold uppercase text-gray-900 leading-tight">Paroki Maria Marganingsih Kalasan</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Program Katekese Sakramen Inisiasi</p>
+            </div>
+            <div class="w-16 shrink-0"></div>
+        </div>
+
+        <div class="text-center mb-8">
+            <h2 class="text-base font-bold uppercase underline tracking-wide text-gray-900">
+                Daftar Peserta Kelas {{ $batch->program->name }}
+            </h2>
+        </div>
+
+        <table class="text-sm mb-8 w-auto">
+            <tr><td class="pr-4 py-0.5 text-gray-500 w-40">Nama Kelas</td><td class="py-0.5 text-gray-800">: {{ $batch->name }}</td></tr>
+            <tr><td class="pr-4 py-0.5 text-gray-500">Program</td><td class="py-0.5 text-gray-800">: Pendampingan {{ $batch->program->name }}</td></tr>
+            <tr><td class="pr-4 py-0.5 text-gray-500">Katekis</td><td class="py-0.5 text-gray-800">: {{ $batch->katekis->pluck('name')->join(', ') ?: '-' }}</td></tr>
+            <tr>
+                <td class="pr-4 py-0.5 text-gray-500">Periode</td>
+                <td class="py-0.5 text-gray-800">:
+                    @if($batch->start_date)
+                        {{ $batch->start_date->translatedFormat('d F Y') }}
+                        @if($batch->end_date) &ndash; {{ $batch->end_date->translatedFormat('d F Y') }} @endif
+                    @else - @endif
+                </td>
+            </tr>
+            <tr><td class="pr-4 py-0.5 text-gray-500">Jumlah Peserta</td><td class="py-0.5 text-gray-800">: {{ $peserta->count() }} orang</td></tr>
+        </table>
+
+        <table class="w-full border-collapse text-sm mb-10">
+            <thead>
+                <tr class="bg-gray-100 print:bg-gray-200">
+                    <th class="border border-gray-400 px-3 py-2 text-center font-semibold w-8">No</th>
+                    <th class="border border-gray-400 px-3 py-2 text-left font-semibold">Nama Siswa</th>
+                    <th class="border border-gray-400 px-3 py-2 text-left font-semibold">Wilayah</th>
+                    <th class="border border-gray-400 px-3 py-2 text-left font-semibold">Lingkungan</th>
+                    <th class="border border-gray-400 px-3 py-2 text-center font-semibold w-32">Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($peserta as $i => $p)
+                <tr>
+                    <td class="border border-gray-300 px-3 py-2 text-center text-gray-500">{{ $i + 1 }}</td>
+                    <td class="border border-gray-300 px-3 py-2 font-medium text-gray-800">{{ $p->name }}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-gray-600">{{ $p->profile?->wilayah ?? '-' }}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-gray-600">{{ $p->profile?->lingkungan ?? '-' }}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-center font-medium">
+                        {{ $p->pivot->lulus === true ? 'Lulus' : ($p->pivot->lulus === false ? 'Tidak Lulus' : '-') }}
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="border border-gray-300 px-3 py-6 text-center text-gray-400">Belum ada peserta terdaftar.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        @if($batch->status === 'completed')
+        @php $namaSakramen = preg_replace('/^Calon\s+/i', '', $batch->program->name); @endphp
+        <div class="mb-10 text-sm text-gray-800 leading-loose border-t border-gray-200 pt-6">
+            <p>Penerimaan Sakramen <strong>{{ $namaSakramen }}</strong> telah dilaksanakan pada tanggal
+                <span class="inline-block border-b border-gray-800 min-w-[160px] text-center">{{ $batch->tanggal_sakramen?->translatedFormat('d F Y') ?? '' }}</span>,
+                oleh <span class="inline-block border-b border-gray-800 min-w-[200px] text-center">{{ $batch->nama_romo ?? '' }}</span>,
+                di Gereja <strong>Paroki Maria Marganingsih Kalasan</strong>.
+            </p>
+        </div>
+        <div class="text-right text-sm text-gray-800 mb-6">Kalasan, {{ now()->translatedFormat('d F Y') }}</div>
+        <div class="flex justify-between gap-12 text-sm text-gray-800">
+            <div class="text-center w-56">
+                <p class="mb-1">Katekis,</p>
+                <div class="mt-20 border-b border-gray-800 pb-1 mx-auto w-full">
+                    <p class="font-semibold">{{ $batch->katekis->first()?->name ?? '' }}</p>
+                </div>
+            </div>
+            <div class="text-center w-56">
+                <p class="mb-1">Romo Paroki,</p>
+                <div class="mt-20 border-b border-gray-800 pb-1 mx-auto w-full">
+                    <p class="font-semibold">{{ $batch->nama_romo ?? '' }}</p>
+                </div>
+            </div>
+        </div>
+        @else
+        <div class="print:hidden border-t border-gray-100 pt-6 text-xs text-gray-400 text-center">
+            Pernyataan dan tanda tangan muncul setelah status kelas diubah menjadi <strong>Selesai</strong>.
+        </div>
+        @endif
+    </div>
+</div>
+
+<style>
+@media print {
+    @page { size: A4; margin: 1.5cm 2cm; }
+    body { background: white; }
+}
+</style>
+
+@push('scripts')
+<script>
+const params   = new URLSearchParams(window.location.search);
+const activeTab = params.get('tab') || 'peserta';
+
+function switchTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove(...b.dataset.activeClass.split(' '));
+        b.classList.add(...b.dataset.inactiveClass.split(' '));
+    });
+
+    const panel = document.getElementById('tab-' + name);
+    if (panel) panel.classList.remove('hidden');
+
+    const btn = document.querySelector(`[data-tab="${name}"]`);
+    if (btn) {
+        btn.classList.remove(...btn.dataset.inactiveClass.split(' '));
+        btn.classList.add(...btn.dataset.activeClass.split(' '));
+    }
+
+    const url = new URL(window.location);
+    url.searchParams.set('tab', name);
+    history.replaceState(null, '', url);
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+switchTab(activeTab);
+</script>
+@endpush
+@endsection

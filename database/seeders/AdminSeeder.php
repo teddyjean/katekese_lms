@@ -10,15 +10,17 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
+        $email = config('admin.email');
+
         User::updateOrCreate(
-            ['email' => 'admin@gerejakalasan.org'],
+            ['email' => $email],
             [
                 'name' => 'Administrator',
-                'email' => 'admin@gerejakalasan.org',
+                'email' => $email,
                 'phone' => null,
                 'role' => 'administrator',
                 'is_active' => true,
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make(config('admin.password')),
             ]
         );
     }

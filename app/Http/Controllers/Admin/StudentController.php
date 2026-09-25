@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -40,6 +41,7 @@ class StudentController extends Controller
     public function toggleActive(User $student)
     {
         abort_unless($student->role === 'peserta', 404);
+        Gate::authorize('manageStudent', $student);
 
         $student->update(['is_active' => ! $student->is_active]);
 
@@ -51,6 +53,7 @@ class StudentController extends Controller
     public function resetPassword(User $student)
     {
         abort_unless($student->role === 'peserta', 404);
+        Gate::authorize('manageStudent', $student);
 
         $newPassword = Str::random(10);
 

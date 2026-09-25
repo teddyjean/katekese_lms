@@ -30,6 +30,7 @@
             </div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
+            @can('manageStudent', $student)
             <form method="POST" action="{{ route('admin.students.toggle-active', $student) }}">
                 @csrf @method('PATCH')
                 <button type="submit"
@@ -48,6 +49,7 @@
                     Reset PW
                 </button>
             </form>
+            @endcan
         </div>
     </div>
 

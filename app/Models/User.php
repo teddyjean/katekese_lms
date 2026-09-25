@@ -67,9 +67,9 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    public function isAdmin(): bool
+    public function isAdministrator(): bool
     {
-        return $this->role === 'katekis';
+        return $this->role === 'administrator';
     }
 
     public function isKatekis(): bool
@@ -80,6 +80,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isPeserta(): bool
     {
         return $this->role === 'peserta';
+    }
+
+    /**
+     * Katekis dan Administrator sama-sama mengakses panel /admin.
+     */
+    public function isStaff(): bool
+    {
+        return in_array($this->role, ['katekis', 'administrator'], true);
     }
 
     public function batchesAsKatekis()

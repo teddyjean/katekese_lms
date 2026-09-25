@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -51,6 +52,7 @@ class KatekisController extends Controller
     public function edit(User $katekis)
     {
         abort_unless($katekis->role === 'katekis', 404);
+        Gate::authorize('manageKatekis', $katekis);
 
         $programs = Program::orderBy('name')->get();
         $selectedPrograms = $katekis->programs()->pluck('programs.id')->toArray();
@@ -61,6 +63,7 @@ class KatekisController extends Controller
     public function update(Request $request, User $katekis)
     {
         abort_unless($katekis->role === 'katekis', 404);
+        Gate::authorize('manageKatekis', $katekis);
 
         $request->validate([
             'name'     => 'required|string|max:255',
@@ -84,6 +87,7 @@ class KatekisController extends Controller
     public function toggleActive(User $katekis)
     {
         abort_unless($katekis->role === 'katekis', 404);
+        Gate::authorize('manageKatekis', $katekis);
 
         if ($katekis->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menonaktifkan akun sendiri.');
@@ -99,6 +103,7 @@ class KatekisController extends Controller
     public function resetPassword(User $katekis)
     {
         abort_unless($katekis->role === 'katekis', 404);
+        Gate::authorize('manageKatekis', $katekis);
 
         $newPassword = Str::random(10);
 

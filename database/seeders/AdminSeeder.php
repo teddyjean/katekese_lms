@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
                 'name' => 'Administrator',
                 'email' => 'admin@gerejakalasan.org',
                 'phone' => null,
-                'role' => 'katekis',
+                'role' => 'administrator',
                 'is_active' => true,
                 'password' => Hash::make('admin123'),
             ]

@@ -12,10 +12,12 @@
                 : 'Daftar semua kelas katekese (Baptis, Komuni, Krisma)' }}
         </p>
     </div>
+    @unless(request()->boolean('mine'))
     <a href="{{ route('admin.batches.create') }}"
        class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm">
         + Buat Kelas
     </a>
+    @endunless
 </div>
 
 {{-- Filter --}}
@@ -94,7 +96,7 @@
                 </td>
                 <td class="px-5 py-3.5">
                     @php
-                        $canManageBatch = auth()->user()->teachesBatch($batch) && $batch->status !== 'completed';
+                        $canManageBatch = \Illuminate\Support\Facades\Gate::allows('manage', $batch) && $batch->status !== 'completed';
                     @endphp
                     <div class="flex items-center gap-1.5">
                         <a href="{{ route('admin.batches.show', $batch) }}"

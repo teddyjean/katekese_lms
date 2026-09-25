@@ -57,10 +57,17 @@
                 <td class="px-5 py-3.5 text-gray-600">{{ $person->profile?->lingkungan ?: '-' }}</td>
                 <td class="px-5 py-3.5 text-gray-600">{{ $person->phone ?: '-' }}</td>
                 <td class="px-5 py-3.5">
+                    @can('manageKatekis', $person)
                     <a href="{{ route('admin.katekis.edit', $person) }}"
                        class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
                         Edit
                     </a>
+                    @else
+                    <a href="{{ route('admin.katekis.show', $person) }}"
+                       class="text-xs font-medium bg-gray-50 text-gray-700 hover:bg-gray-100 px-2.5 py-1 rounded-lg transition-colors">
+                        Lihat
+                    </a>
+                    @endcan
                 </td>
             </tr>
             @empty

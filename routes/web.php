@@ -26,8 +26,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check()) {
-        $role = auth()->user()->role;
-        return redirect()->route($role === 'katekis' ? 'admin.dashboard' : 'peserta.dashboard');
+        return redirect()->route(auth()->user()->isStaff() ? 'admin.dashboard' : 'peserta.dashboard');
     }
     return redirect()->route('login');
 });
@@ -52,7 +51,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin (dikelola oleh katekis)
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:katekis'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:katekis,administrator'])->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
     // Profil Saya (katekis)

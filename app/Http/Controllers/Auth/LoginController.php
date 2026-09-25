@@ -49,9 +49,6 @@ class LoginController extends Controller
 
     private function redirectTo(): string
     {
-        return match (Auth::user()->role) {
-            'katekis' => route('admin.dashboard'),
-            default => route('peserta.dashboard'),
-        };
+        return Auth::user()->isStaff() ? route('admin.dashboard') : route('peserta.dashboard');
     }
 }

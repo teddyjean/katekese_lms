@@ -30,6 +30,7 @@
             </div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
+            @can('manageKatekis', $katekis)
             <a href="{{ route('admin.katekis.edit', $katekis) }}"
                class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors">
                 Edit
@@ -54,6 +55,7 @@
                     Reset PW
                 </button>
             </form>
+            @endcan
         </div>
     </div>
 

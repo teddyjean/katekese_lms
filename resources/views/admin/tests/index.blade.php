@@ -57,7 +57,7 @@
                            class="text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 px-2.5 py-1 rounded-lg transition-colors">
                             Kelola Soal
                         </a>
-                        @if(auth()->user()->teachesBatch($test->batch))
+                        @can('manage', $test->batch)
                         <form method="POST" action="{{ route('admin.tests.toggle-active', $test) }}">
                             @csrf @method('PATCH')
                             <button class="text-xs font-medium px-2.5 py-1 rounded-lg transition-colors
@@ -74,7 +74,7 @@
                                 Hapus
                             </button>
                         </form>
-                        @endif
+                        @endcan
                     </div>
                 </td>
             </tr>

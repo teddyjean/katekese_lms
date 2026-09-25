@@ -54,7 +54,7 @@
                             Download
                         </a>
                         @endif
-                        @if(auth()->user()->teachesBatch($material->batch))
+                        @can('manage', $material->batch)
                         <a href="{{ route('admin.materials.edit', $material) }}"
                            class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
                             Edit
@@ -66,7 +66,7 @@
                                 Hapus
                             </button>
                         </form>
-                        @endif
+                        @endcan
                     </div>
                 </td>
             </tr>

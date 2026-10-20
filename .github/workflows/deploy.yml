@@ -48,3 +48,21 @@ jobs:
           git add -f vendor public/build
           git commit -m "deploy: build from main@${SHORT_SHA}"
           git push origin deploy --force
+
+      # hPanel Git Deploy menarik branch "deploy" otomatis, tapi itu cuma
+      # menyalin file -- tidak menjalankan migrasi. Langkah ini SSH ke
+      # Hostinger, pastikan public_html/public benar-benar sudah di commit
+      # "deploy" terbaru (tidak bergantung timing webhook hPanel), lalu
+      # jalankan migrate supaya skema DB ikut up-to-date setiap push ke main.
+      - name: Run migrations on Hostinger
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          script: |
+            cd public_html/public
+            git fetch origin deploy
+            git reset --hard origin/deploy
+            php artisan migrate --force

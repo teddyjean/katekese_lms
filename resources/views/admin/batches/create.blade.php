@@ -14,12 +14,20 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Katekese</label>
-            <select name="program_id" id="program_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 @error('program_id') border-red-400 @enderror">
-                <option value="">-- Pilih Jenis (Baptis / Komuni / Krisma) --</option>
-                @foreach($programs as $program)
-                    <option value="{{ $program->id }}" @selected(old('program_id') == $program->id)>{{ $program->name }}</option>
-                @endforeach
-            </select>
+            @if($selectedProgram)
+                <div class="flex items-center justify-between gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+                    <span class="font-medium text-gray-800">{{ $selectedProgram->name }}</span>
+                    <a href="{{ route('admin.batches.create') }}" class="text-xs text-blue-600 hover:underline shrink-0">Ganti</a>
+                </div>
+                <input type="hidden" name="program_id" id="program_id" value="{{ $selectedProgram->id }}">
+            @else
+                <select name="program_id" id="program_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 @error('program_id') border-red-400 @enderror">
+                    <option value="">-- Pilih Jenis (Baptis / Komuni / Krisma) --</option>
+                    @foreach($programs as $program)
+                        <option value="{{ $program->id }}" @selected(old('program_id') == $program->id)>{{ $program->name }}</option>
+                    @endforeach
+                </select>
+            @endif
             @error('program_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
@@ -112,7 +120,9 @@
         });
     }
 
-    programSelect.addEventListener('change', e => renderKatekis(e.target.value));
+    if (programSelect.tagName === 'SELECT') {
+        programSelect.addEventListener('change', e => renderKatekis(e.target.value));
+    }
     renderKatekis(programSelect.value);
 </script>
 @endpush

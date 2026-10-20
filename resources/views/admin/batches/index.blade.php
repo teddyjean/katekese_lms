@@ -13,7 +13,7 @@
         </p>
     </div>
     @unless(request()->boolean('mine'))
-    <a href="{{ route('admin.batches.create') }}"
+    <a href="{{ route('admin.batches.create', array_filter(['program_id' => request('program_id')])) }}"
        class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm">
         + Buat Kelas
     </a>

@@ -45,7 +45,7 @@ class BatchController extends Controller
         return view('admin.batches.index', compact('batches', 'yearsQuery'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $programs = Program::where('status', 'active')->orderBy('name')->get();
 
@@ -58,7 +58,13 @@ class BatchController extends Controller
                 ->values(),
         ]);
 
-        return view('admin.batches.create', compact('programs', 'katekisByProgram'));
+        // Datang dari menu Program (mis. "Lihat Kelas" > "+ Buat Kelas") --
+        // kunci jenis katekese-nya, tidak perlu dipilih ulang.
+        $selectedProgram = $request->filled('program_id')
+            ? $programs->firstWhere('id', (int) $request->program_id)
+            : null;
+
+        return view('admin.batches.create', compact('programs', 'katekisByProgram', 'selectedProgram'));
     }
 
     public function store(Request $request)

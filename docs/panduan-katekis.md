@@ -57,6 +57,10 @@ Setelah proses pendaftaran selesai, pengguna akan diarahkan ke halaman login den
 
 Setelah berhasil masuk, pengguna akan diarahkan secara otomatis ke halaman Dashboard katekis.
 
+### 1.4 Lupa Password
+
+Apabila password lupa, katekis tidak perlu meminta bantuan katekis lain. Pada halaman Masuk, klik tautan "Lupa password?", lalu isi email yang terdaftar dan klik Kirim Link Reset. Sebuah tautan reset password akan dikirim ke email tersebut; buka tautan itu, isi password baru beserta konfirmasinya, kemudian password akan aktif dan dapat langsung digunakan untuk masuk.
+
 ---
 
 ## 2. Mengenal Menu Utama
@@ -193,6 +197,8 @@ Catatan penting: setiap kelas harus selalu memiliki minimal satu katekis pengaja
 
 Tombol Edit Kelas pada halaman detail, yang hanya muncul apabila pengguna memiliki hak kelola, digunakan untuk mengubah nama kelas, program, tanggal mulai/selesai, deskripsi, atau status kelas (Aktif, Selesai, atau Arsip).
 
+Catatan: tombol Hapus Kelas (penghapusan permanen beserta seluruh materi, tugas, test, presensi, nilai, dan pendaftaran siswa di dalamnya) hanya tersedia bagi akun pengelola aplikasi (Administrator), bukan akun katekis biasa. Apabila suatu kelas benar-benar perlu dihapus permanen, hubungi pengelola aplikasi.
+
 ---
 
 ## 6. Materi Pembelajaran
@@ -321,7 +327,7 @@ Tab Dokumen pada halaman kelas menyediakan daftar peserta kelas dalam format sia
 
 Menu Katekis menampilkan seluruh katekis yang terdaftar pada aplikasi, termasuk akun pengguna sendiri.
 
-- Kolom pencarian (berdasarkan nama atau email), filter Bidang, dan filter Status (Aktif/Nonaktif) tersedia untuk mempersempit daftar.
+- Kolom pencarian (berdasarkan nama atau email), filter Bidang, dan filter Status (Aktif, Nonaktif, atau Semua Status) tersedia untuk mempersempit daftar. Secara baku, filter Status diatur ke Aktif, sehingga katekis yang sudah dinonaktifkan tidak tampil pada daftar kecuali filter diubah ke Nonaktif atau Semua Status.
 - Klik nama katekis untuk membuka profilnya, meliputi data diri, bidang yang diampu, dan daftar kelas yang diajar.
 - Dari halaman detail katekis, tersedia opsi berikut:
   - Edit, untuk mengubah data nama, email, no HP, dan bidang program.
@@ -338,7 +344,7 @@ Catatan tambahan: tidak terdapat tombol "Tambah Katekis" pada menu ini. Akun kat
 
 Menu Siswa menampilkan seluruh siswa (peserta) yang terdaftar pada aplikasi, mencakup seluruh kelas dan program.
 
-- Kolom pencarian pada bagian atas digunakan untuk mencari berdasarkan nama.
+- Kolom pencarian pada bagian atas digunakan untuk mencari berdasarkan nama. Filter Status (Aktif, Nonaktif, atau Semua Status) tersedia di sampingnya; secara baku filter diatur ke Aktif, sehingga siswa yang sudah dinonaktifkan tidak tampil kecuali filter diubah.
 - Klik nama siswa untuk membuka profil lengkapnya, meliputi data pribadi, data orang tua, data sakramen (nama baptis, gereja baptis, dan sebagainya), serta Riwayat Kelas, yaitu seluruh kelas yang pernah atau sedang diikuti beserta status pendaftaran dan status kelulusan pada masing-masing kelas.
 - Dari halaman profil siswa tersedia tombol Nonaktifkan/Aktifkan akun dan Reset PW, dengan fungsi yang sama seperti pada data katekis.
 
@@ -375,7 +381,10 @@ Pertanyaan: Bagaimana cara memindahkan siswa dari satu kelas ke kelas lain?
 Jawaban: Fitur ini belum tersedia pada tampilan aplikasi saat ini. Sebagai langkah sementara, siswa dapat dihapus dari kelas lama melalui tombol Hapus pada tab Peserta, kemudian diminta mendaftar ulang ke kelas baru. Alternatif lain adalah menghubungi pengelola aplikasi.
 
 Pertanyaan: Password akun terlupa.
-Jawaban: Katekis lain dapat mereset password melalui menu Katekis, kemudian memilih nama pengguna yang bersangkutan, lalu klik Reset PW. Fitur pemulihan password secara mandiri dari halaman login belum tersedia.
+Jawaban: Gunakan tautan "Lupa password?" pada halaman Masuk untuk mereset password secara mandiri melalui email, lihat [Bab 1.4](#14-lupa-password). Sebagai alternatif, katekis lain juga dapat membantu mereset password melalui menu Katekis, kemudian memilih nama pengguna yang bersangkutan, lalu klik Reset PW.
+
+Pertanyaan: Siapa yang bisa menghapus kelas secara permanen?
+Jawaban: Hanya akun pengelola aplikasi (Administrator) yang memiliki hak menghapus kelas, lihat catatan pada [Bab 5.5](#55-mengubah-data-kelas). Akun katekis biasa, termasuk yang membuat kelas tersebut, tidak memiliki tombol Hapus Kelas.
 
 ---
 

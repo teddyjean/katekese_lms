@@ -6,14 +6,15 @@
     <title>Masuk — SMPSI Paroki Kalasan</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-950 flex items-center justify-center p-4 py-6">
+<body class="min-h-screen bg-slate-950 flex items-center justify-center p-4 py-6 relative bg-cover bg-center bg-fixed"
+      style="background-image: url('{{ asset('img/gereja.webp') }}');">
 
-    <div class="w-full max-w-sm lg:max-w-4xl lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
+    <div class="absolute inset-0 bg-slate-950/70"></div>
+
+    <div class="relative z-10 w-full max-w-sm lg:max-w-4xl lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
 
         {{-- Branding --}}
         <div class="text-center lg:text-left mb-6 lg:mb-0">
-            <img src="{{ asset('img/LOGO PAROKI-WARNA.png') }}" alt="Logo Paroki"
-                 class="w-16 h-16 lg:w-24 lg:h-24 object-contain mx-auto lg:mx-0 mb-3 lg:mb-5 drop-shadow-lg">
             <p class="text-slate-500 text-xs font-semibold tracking-widest uppercase mb-1">SMPSI</p>
             <h1 class="text-lg sm:text-xl lg:text-3xl font-bold text-white leading-snug">Sistem Manajemen Pembelajaran Sakramen Inisiasi</h1>
             <p class="text-slate-400 text-sm lg:text-base mt-1 lg:mt-2">Paroki Maria Marganingsih Kalasan</p>

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DeployController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Peserta\AssignmentController as PesertaAssignmentController;
@@ -30,6 +31,8 @@ Route::get('/', function () {
     }
     return redirect()->route('login');
 });
+
+Route::post('/internal/deploy-migrate', [DeployController::class, 'migrate']);
 
 // Auth
 Route::middleware('guest')->group(function () {

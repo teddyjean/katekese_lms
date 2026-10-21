@@ -24,3 +24,6 @@ Homestead.yaml
 Thumbs.db
 /appkey.txt
 /PRODUCTION_CHECKLIST.md
+/ssh-hostinger.bat
+/ssh.txt
+/TODO_DEPLOY_SSH.md

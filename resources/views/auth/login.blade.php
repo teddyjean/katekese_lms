@@ -15,9 +15,8 @@
 
         {{-- Branding --}}
         <div class="text-center lg:text-left mb-6 lg:mb-0">
-            <p class="text-slate-500 text-xs font-semibold tracking-widest uppercase mb-1">SMPSI</p>
             <h1 class="text-lg sm:text-xl lg:text-3xl font-bold text-white leading-snug">Sistem Manajemen Pembelajaran Sakramen Inisiasi</h1>
-            <p class="text-slate-400 text-sm lg:text-base mt-1 lg:mt-2">Paroki Maria Marganingsih Kalasan</p>
+            <p class="text-white text-sm lg:text-base mt-1 lg:mt-2">Paroki Maria Marganingsih Kalasan</p>
         </div>
 
         {{-- Form --}}

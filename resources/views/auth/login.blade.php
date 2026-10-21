@@ -78,5 +78,10 @@
 
     </div>
 
+    <footer class="absolute bottom-3 inset-x-0 z-10 text-center text-[11px] text-slate-300/70 leading-relaxed px-4">
+        Bidang Penelitian &amp; Pengembangan<br>
+        Paroki Maria Marganingsih Kalasan &middot; 2026
+    </footer>
+
 </body>
 </html>

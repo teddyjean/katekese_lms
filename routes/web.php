@@ -11,9 +11,11 @@ use App\Http\Controllers\Admin\ProfileController as KatekisProfileController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TestController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DeployController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Peserta\AssignmentController as PesertaAssignmentController;
 use App\Http\Controllers\Peserta\AttendanceController as PesertaAttendanceController;
@@ -40,6 +42,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
     Route::get('/register', [RegisterController::class, 'showForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
+
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,19 @@ class AppServiceProvider extends ServiceProvider
                 ->line('Silakan klik tombol di bawah ini untuk memverifikasi alamat email Anda.')
                 ->action('Verifikasi Alamat Email', $url)
                 ->line('Jika Anda tidak membuat akun ini, Anda dapat mengabaikan email ini.')
+                ->salutation("Salam,\n".config('app.name'));
+        });
+
+        ResetPassword::toMailUsing(function ($notifiable, $token) {
+            $url = route('password.reset', ['token' => $token, 'email' => $notifiable->getEmailForPasswordReset()]);
+
+            return (new MailMessage)
+                ->subject('Reset Password')
+                ->greeting('Halo!')
+                ->line('Kami menerima permintaan reset password untuk akun Anda.')
+                ->action('Reset Password', $url)
+                ->line('Link ini akan kedaluwarsa dalam 60 menit.')
+                ->line('Jika Anda tidak meminta reset password, Anda dapat mengabaikan email ini.')
                 ->salutation("Salam,\n".config('app.name'));
         });
 

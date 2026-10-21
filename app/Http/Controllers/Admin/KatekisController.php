@@ -29,8 +29,11 @@ class KatekisController extends Controller
             });
         }
 
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'aktif');
+        $status = $request->query('status', 'aktif');
+        if ($status === 'aktif') {
+            $query->where('is_active', true);
+        } elseif ($status === 'nonaktif') {
+            $query->where('is_active', false);
         }
 
         $katekisList = $query->orderBy('name')->paginate(15)->withQueryString();

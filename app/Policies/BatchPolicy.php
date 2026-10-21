@@ -15,4 +15,13 @@ class BatchPolicy
     {
         return $user->teachesBatch($batch);
     }
+
+    /**
+     * Hanya Administrator yang boleh menghapus kelas secara permanen
+     * (Gate::before di AppServiceProvider meloloskan Administrator).
+     */
+    public function delete(User $user, Batch $batch): bool
+    {
+        return false;
+    }
 }

@@ -171,6 +171,15 @@ class BatchController extends Controller
         return redirect()->route('admin.batches.show', $batch)->with('success', 'Angkatan berhasil diperbarui.');
     }
 
+    public function destroy(Batch $batch)
+    {
+        Gate::authorize('delete', $batch);
+
+        $batch->delete();
+
+        return redirect()->route('admin.batches.index')->with('success', 'Angkatan berhasil dihapus beserta semua data terkaitnya.');
+    }
+
     // ── Katekis ──────────────────────────────────────────────────────────────
 
     public function assignKatekis(Request $request, Batch $batch)

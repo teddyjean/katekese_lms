@@ -19,6 +19,13 @@ class StudentController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        $status = $request->query('status', 'aktif');
+        if ($status === 'aktif') {
+            $query->where('is_active', true);
+        } elseif ($status === 'nonaktif') {
+            $query->where('is_active', false);
+        }
+
         $students = $query->orderBy('name')->paginate(15)->withQueryString();
 
         return view('admin.students.index', compact('students'));

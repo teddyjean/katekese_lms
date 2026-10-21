@@ -87,7 +87,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ka
     Route::patch('programs/{program}/toggle-status', [ProgramController::class, 'toggleStatus'])->name('programs.toggle-status');
 
     // Batch / Angkatan Management
-    Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
     Route::post('batches/{batch}/katekis', [BatchController::class, 'assignKatekis'])->name('batches.katekis.assign');
     Route::delete('batches/{batch}/katekis/{user}', [BatchController::class, 'removeKatekis'])->name('batches.katekis.remove');
     Route::delete('batches/{batch}/peserta/{user}', [BatchController::class, 'removePeserta'])->name('batches.peserta.remove');

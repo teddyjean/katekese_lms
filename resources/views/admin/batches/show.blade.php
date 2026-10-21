@@ -22,6 +22,17 @@
         @else
         <span class="text-xs text-gray-400 italic px-2 py-2">Anda tidak mengajar kelas ini &mdash; hanya bisa melihat.</span>
         @endif
+        @can('delete', $batch)
+        <form method="POST" action="{{ route('admin.batches.destroy', $batch) }}"
+              onsubmit="return confirm('Hapus kelas {{ $batch->name }}? Semua materi, tugas, test, presensi, nilai, dan pendaftaran siswa di kelas ini akan ikut terhapus permanen dan tidak bisa dibatalkan.')">
+            @csrf
+            @method('DELETE')
+            <button type="submit"
+                    class="text-sm font-medium bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-4 py-2 rounded-xl transition-colors shadow-sm">
+                Hapus Kelas
+            </button>
+        </form>
+        @endcan
     </div>
 </div>
 

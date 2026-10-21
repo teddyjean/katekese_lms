@@ -14,8 +14,14 @@
            placeholder="Cari nama siswa..."
            class="flex-1 min-w-48 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
 
+    <select name="status" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+        <option value="aktif" @selected(request('status', 'aktif') === 'aktif')>Aktif</option>
+        <option value="nonaktif" @selected(request('status') === 'nonaktif')>Nonaktif</option>
+        <option value="semua" @selected(request('status') === 'semua')>Semua Status</option>
+    </select>
+
     <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-4 py-2 rounded-xl transition-colors">Cari</button>
-    @if(request()->anyFilled(['search']))
+    @if(request()->anyFilled(['search']) || request('status', 'aktif') !== 'aktif')
         <a href="{{ route('admin.students.index') }}" class="text-sm text-gray-400 hover:text-red-500 px-3 py-2 transition-colors">Reset</a>
     @endif
 </form>

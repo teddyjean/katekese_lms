@@ -1,13 +1,13 @@
 @extends('layouts.app')
 @section('title', $test->title)
 @section('content')
-<div class="mb-6 flex items-start justify-between">
-    <div>
+<div class="mb-6 flex items-start justify-between flex-wrap gap-y-3">
+    <div class="min-w-0">
         <h1 class="text-2xl font-bold text-gray-800">{{ $test->title }}</h1>
         <p class="text-gray-500 text-sm mt-1">{{ $test->batch->name }}</p>
     </div>
     @if($test->duration_minutes)
-        <div class="bg-orange-50 border border-orange-200 rounded-lg px-4 py-2 text-sm font-mono font-bold text-orange-700" id="timer">
+        <div class="shrink-0 bg-orange-50 border border-orange-200 rounded-lg px-4 py-2 text-sm font-mono font-bold text-orange-700" id="timer">
             {{ $test->duration_minutes }}:00
         </div>
     @endif

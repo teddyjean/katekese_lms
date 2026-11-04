@@ -8,20 +8,19 @@ use App\Models\User;
 class BatchPolicy
 {
     /**
-     * Katekis hanya boleh mengubah kelas yang mereka ajar; katekis lain
-     * hanya bisa melihat.
+     * Administrator boleh mengelola kelas apapun walau bukan pengajarnya.
+     * Katekis hanya boleh mengubah kelas yang mereka ajar.
      */
     public function manage(User $user, Batch $batch): bool
     {
-        return $user->teachesBatch($batch);
+        return $user->isAdministrator() || $user->teachesBatch($batch);
     }
 
     /**
-     * Hanya Administrator yang boleh menghapus kelas secara permanen
-     * (Gate::before di AppServiceProvider meloloskan Administrator).
+     * Hanya Administrator yang boleh menghapus kelas secara permanen.
      */
     public function delete(User $user, Batch $batch): bool
     {
-        return false;
+        return $user->isAdministrator();
     }
 }

@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class BatchController extends Controller
 {
@@ -51,6 +52,7 @@ class BatchController extends Controller
 
         $katekisByProgram = $programs->mapWithKeys(fn ($program) => [
             $program->id => $program->katekis()
+                ->where('role', 'katekis')
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['users.id', 'users.name'])
@@ -88,8 +90,11 @@ class BatchController extends Controller
             'status'      => 'active',
         ]);
 
-        $katekisIds = collect($request->input('katekis_ids', []))->push(auth()->id())->unique();
-        $batch->katekis()->sync($katekisIds);
+        $katekisIds = collect($request->input('katekis_ids', []));
+        if (auth()->user()->isKatekis()) {
+            $katekisIds = $katekisIds->push(auth()->id());
+        }
+        $batch->katekis()->sync($katekisIds->unique());
 
         return redirect()->route('admin.batches.show', $batch)->with('success', 'Angkatan berhasil dibuat.');
     }
@@ -186,7 +191,9 @@ class BatchController extends Controller
     {
         Gate::authorize('manage', $batch);
 
-        $request->validate(['user_id' => 'required|exists:users,id']);
+        $request->validate([
+            'user_id' => ['required', Rule::exists('users', 'id')->where('role', 'katekis')],
+        ]);
         $batch->katekis()->syncWithoutDetaching([$request->user_id]);
         return back()->with('success', 'Katekis berhasil ditambahkan.');
     }

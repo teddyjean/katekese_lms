@@ -3,9 +3,9 @@
 @section('title', request()->boolean('mine') ? 'Kelas Saya' : 'Kelola Kelas')
 
 @section('content')
-<div class="mb-6 flex items-start justify-between flex-wrap gap-y-3">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">{{ request()->boolean('mine') ? 'Kelas Saya' : 'Kelola Kelas' }}</h1>
+<div class="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+    <div class="min-w-0">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ request()->boolean('mine') ? 'Kelas Saya' : 'Kelola Kelas' }}</h1>
         <p class="text-gray-500 text-sm mt-1">
             {{ request()->boolean('mine')
                 ? 'Kelas yang sedang maupun sudah selesai Anda ampu'
@@ -14,7 +14,7 @@
     </div>
     @unless(request()->boolean('mine'))
     <a href="{{ route('admin.batches.create', array_filter(['program_id' => request('program_id')])) }}"
-       class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm">
+       class="shrink-0 w-full sm:w-auto text-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm">
         + Buat Kelas
     </a>
     @endunless
@@ -28,13 +28,13 @@
     @if(request('program_id'))
         <input type="hidden" name="program_id" value="{{ request('program_id') }}">
     @endif
-    <select name="year" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+    <select name="year" class="flex-1 min-w-[140px] sm:flex-initial border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
         <option value="">Semua Tahun</option>
         @foreach($yearsQuery as $year)
             <option value="{{ $year }}" @selected(request('year') == $year)>{{ $year }}</option>
         @endforeach
     </select>
-    <select name="status" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+    <select name="status" class="flex-1 min-w-[140px] sm:flex-initial border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
         <option value="">Semua Status</option>
         <option value="active"    @selected(request('status') === 'active')>Aktif</option>
         <option value="completed" @selected(request('status') === 'completed')>Selesai</option>
@@ -46,8 +46,67 @@
     @endif
 </form>
 
-{{-- Tabel --}}
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+@php
+    $statusColorMap = [
+        'active'    => 'bg-emerald-100 text-emerald-700',
+        'completed' => 'bg-blue-100 text-blue-700',
+    ];
+    $statusLabelMap = [
+        'active'    => 'Aktif',
+        'completed' => 'Selesai',
+    ];
+@endphp
+
+{{-- Mobile: card list --}}
+<div class="sm:hidden space-y-3 mb-6">
+    @forelse($batches as $batch)
+        @php
+            $canManageBatch = \Illuminate\Support\Facades\Gate::allows('manage', $batch) && $batch->status !== 'completed';
+        @endphp
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 {{ $batch->status === 'completed' ? 'bg-emerald-50/60' : ($batch->status === 'archived' ? 'bg-gray-50/60' : '') }}">
+            <div class="flex items-start justify-between gap-2 mb-2">
+                <a href="{{ route('admin.batches.show', $batch) }}"
+                   class="font-semibold text-blue-600 hover:text-blue-700 leading-snug break-words">{{ $batch->name }}</a>
+                <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full {{ $statusColorMap[$batch->status] ?? 'bg-gray-100 text-gray-500' }}">
+                    {{ $statusLabelMap[$batch->status] ?? 'Arsip' }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mb-2">{{ $batch->program->name }}</p>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 mb-3">
+                <span>
+                    @if($batch->start_date)
+                        {{ $batch->start_date->format('d M Y') }}
+                        @if($batch->end_date) — {{ $batch->end_date->format('d M Y') }} @endif
+                    @else
+                        Periode belum diatur
+                    @endif
+                </span>
+                <span>{{ $batch->katekis_count }} katekis</span>
+                <span>{{ $batch->peserta_count }} peserta</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('admin.batches.show', $batch) }}"
+                   class="flex-1 text-center text-xs font-medium px-2.5 py-2 rounded-lg transition-colors
+                       {{ $canManageBatch
+                           ? 'bg-violet-50 text-violet-700 hover:bg-violet-100'
+                           : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }}">
+                    {{ $canManageBatch ? 'Kelola' : 'Lihat' }}
+                </a>
+                @if($canManageBatch)
+                <a href="{{ route('admin.batches.edit', $batch) }}"
+                   class="flex-1 text-center text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-2 rounded-lg transition-colors">
+                    Edit
+                </a>
+                @endif
+            </div>
+        </div>
+    @empty
+        <div class="bg-white rounded-2xl p-8 text-center text-gray-400 shadow-sm border border-gray-100">Belum ada kelas.</div>
+    @endforelse
+</div>
+
+{{-- Desktop: table --}}
+<div class="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
     <div class="overflow-x-auto">
     <table class="w-full min-w-[700px] text-sm">
         <thead class="bg-gray-50 border-b border-gray-100">
@@ -80,19 +139,9 @@
                 <td class="px-5 py-3.5 text-gray-500">{{ $batch->katekis_count }}</td>
                 <td class="px-5 py-3.5 text-gray-500">{{ $batch->peserta_count }}</td>
                 <td class="px-5 py-3.5">
-                    @php
-                        $statusColor = match($batch->status) {
-                            'active'    => 'bg-emerald-100 text-emerald-700',
-                            'completed' => 'bg-blue-100 text-blue-700',
-                            default     => 'bg-gray-100 text-gray-500',
-                        };
-                        $statusLabel = match($batch->status) {
-                            'active'    => 'Aktif',
-                            'completed' => 'Selesai',
-                            default     => 'Arsip',
-                        };
-                    @endphp
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $statusColor }}">{{ $statusLabel }}</span>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $statusColorMap[$batch->status] ?? 'bg-gray-100 text-gray-500' }}">
+                        {{ $statusLabelMap[$batch->status] ?? 'Arsip' }}
+                    </span>
                 </td>
                 <td class="px-5 py-3.5">
                     @php
@@ -123,10 +172,11 @@
         </tbody>
     </table>
     </div>
-    @if($batches->hasPages())
-        <div class="px-5 py-4 border-t border-gray-100">
-            {{ $batches->links() }}
-        </div>
-    @endif
 </div>
+
+@if($batches->hasPages())
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4">
+        {{ $batches->links() }}
+    </div>
+@endif
 @endsection

@@ -25,7 +25,58 @@
     @endif
 </form>
 
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+@php
+    $testStatusColor = fn($test) => $test->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500';
+    $testStatusLabel = fn($test) => $test->is_active ? 'Aktif' : 'Draft';
+@endphp
+
+{{-- Mobile: card list --}}
+<div class="sm:hidden space-y-3 mb-6">
+    @forelse($tests as $test)
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-start justify-between gap-2 mb-1">
+                <p class="font-medium text-gray-800">{{ $test->title }}</p>
+                <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full {{ $testStatusColor($test) }}">
+                    {{ $testStatusLabel($test) }}
+                </span>
+            </div>
+            <p class="text-xs text-gray-500 mb-2">{{ $test->batch->name }}</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 mb-3">
+                <span>{{ $test->questions_count }} soal</span>
+                <span>{{ $test->duration_minutes ? $test->duration_minutes . ' menit' : 'Tanpa batas' }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <a href="{{ route('admin.tests.show', $test) }}"
+                   class="text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 px-2.5 py-1.5 rounded-lg transition-colors">
+                    Kelola Soal
+                </a>
+                @can('manage', $test->batch)
+                <form method="POST" action="{{ route('admin.tests.toggle-active', $test) }}">
+                    @csrf @method('PATCH')
+                    <button class="text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors
+                                   {{ $test->is_active
+                                      ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                                      : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }}">
+                        {{ $test->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                    </button>
+                </form>
+                <form method="POST" action="{{ route('admin.tests.destroy', $test) }}"
+                      onsubmit="return confirm('Hapus test ini?')">
+                    @csrf @method('DELETE')
+                    <button class="text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg transition-colors">
+                        Hapus
+                    </button>
+                </form>
+                @endcan
+            </div>
+        </div>
+    @empty
+        <div class="bg-white rounded-2xl p-8 text-center text-gray-400 shadow-sm border border-gray-100">Belum ada test.</div>
+    @endforelse
+</div>
+
+{{-- Desktop: table --}}
+<div class="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
     <div class="overflow-x-auto">
     <table class="w-full min-w-[640px] text-sm">
         <thead class="bg-gray-50 border-b border-gray-100">
@@ -46,9 +97,8 @@
                 <td class="px-5 py-3.5 text-gray-500">{{ $test->questions_count }} soal</td>
                 <td class="px-5 py-3.5 text-gray-500">{{ $test->duration_minutes ? $test->duration_minutes . ' menit' : 'Tanpa batas' }}</td>
                 <td class="px-5 py-3.5">
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full
-                                 {{ $test->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
-                        {{ $test->is_active ? 'Aktif' : 'Draft' }}
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $testStatusColor($test) }}">
+                        {{ $testStatusLabel($test) }}
                     </span>
                 </td>
                 <td class="px-5 py-3.5">
@@ -84,8 +134,9 @@
         </tbody>
     </table>
     </div>
-    @if($tests->hasPages())
-        <div class="px-5 py-4 border-t border-gray-100">{{ $tests->links() }}</div>
-    @endif
 </div>
+
+@if($tests->hasPages())
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4">{{ $tests->links() }}</div>
+@endif
 @endsection

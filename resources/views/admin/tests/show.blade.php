@@ -129,7 +129,26 @@
         Hasil Siswa
         <span class="text-gray-400 font-normal text-sm">({{ $test->attempts->where('submitted_at', '!=', null)->count() }} selesai)</span>
     </h2>
-    <div class="overflow-x-auto -mx-5">
+    {{-- Mobile: card list --}}
+    <div class="sm:hidden space-y-2 -mx-5 px-5">
+        @foreach($test->attempts as $attempt)
+        <div class="border border-gray-100 rounded-xl px-3 py-2.5">
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-sm text-gray-800 font-medium">{{ $attempt->user->name }}</p>
+                <span class="text-sm font-bold shrink-0 {{ $attempt->score !== null ? 'text-blue-700' : 'text-gray-400' }}">
+                    {{ $attempt->score !== null ? $attempt->score . '%' : '-' }}
+                </span>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+                Mulai: {{ $attempt->started_at->format('d M Y H:i') }}<br>
+                Selesai: {{ $attempt->submitted_at ? $attempt->submitted_at->format('d M Y H:i') : 'Belum selesai' }}
+            </p>
+        </div>
+        @endforeach
+    </div>
+
+    {{-- Desktop: table --}}
+    <div class="hidden sm:block overflow-x-auto -mx-5">
     <table class="w-full min-w-[480px] text-sm">
         <thead class="bg-gray-50">
             <tr>

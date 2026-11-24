@@ -25,7 +25,43 @@
     @endif
 </form>
 
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+{{-- Mobile: card list --}}
+<div class="sm:hidden space-y-3 mb-6">
+    @forelse($assignments as $assignment)
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <p class="font-medium text-gray-800 mb-1">{{ $assignment->title }}</p>
+            <p class="text-xs text-gray-500 mb-2">{{ $assignment->batch->name }}</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 mb-3">
+                <span>Deadline: {{ $assignment->deadline ? $assignment->deadline->format('d M Y H:i') : '-' }}</span>
+                <span>Nilai Maks: {{ $assignment->max_score }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <a href="{{ route('admin.assignments.show', $assignment) }}"
+                   class="text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 px-2.5 py-1.5 rounded-lg transition-colors">
+                    Submission
+                </a>
+                @can('manage', $assignment->batch)
+                <a href="{{ route('admin.assignments.edit', $assignment) }}"
+                   class="text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors">
+                    Edit
+                </a>
+                <form method="POST" action="{{ route('admin.assignments.destroy', $assignment) }}"
+                      onsubmit="return confirm('Hapus tugas ini?')">
+                    @csrf @method('DELETE')
+                    <button class="text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg transition-colors">
+                        Hapus
+                    </button>
+                </form>
+                @endcan
+            </div>
+        </div>
+    @empty
+        <div class="bg-white rounded-2xl p-8 text-center text-gray-400 shadow-sm border border-gray-100">Belum ada tugas.</div>
+    @endforelse
+</div>
+
+{{-- Desktop: table --}}
+<div class="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
     <div class="overflow-x-auto">
     <table class="w-full min-w-[580px] text-sm">
         <thead class="bg-gray-50 border-b border-gray-100">
@@ -74,8 +110,9 @@
         </tbody>
     </table>
     </div>
-    @if($assignments->hasPages())
-        <div class="px-5 py-4 border-t border-gray-100">{{ $assignments->links() }}</div>
-    @endif
 </div>
+
+@if($assignments->hasPages())
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4">{{ $assignments->links() }}</div>
+@endif
 @endsection

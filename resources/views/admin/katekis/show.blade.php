@@ -101,7 +101,36 @@
     <div class="px-5 py-4 border-b border-gray-100">
         <h2 class="font-semibold text-gray-700">Kelas yang Diampu</h2>
     </div>
-    <div class="overflow-x-auto">
+    @php
+        $batchStatusLabel = fn($batch) => match($batch->status) {
+            'active'    => 'Aktif',
+            'completed' => 'Selesai',
+            default     => 'Arsip',
+        };
+        $batchStatusColor = fn($batch) => match($batch->status) {
+            'active'    => 'bg-blue-100 text-blue-700',
+            'completed' => 'bg-emerald-100 text-emerald-700',
+            default     => 'bg-gray-100 text-gray-500',
+        };
+    @endphp
+
+    {{-- Mobile: card list --}}
+    <div class="sm:hidden divide-y divide-gray-50">
+        @forelse($katekis->batchesAsKatekis as $batch)
+        <div class="px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2">
+                <a href="{{ route('admin.batches.show', $batch) }}" class="font-medium text-gray-800 hover:text-blue-600 transition-colors break-words">{{ $batch->name }}</a>
+                <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full {{ $batchStatusColor($batch) }}">{{ $batchStatusLabel($batch) }}</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-0.5">{{ $batch->program->name }}</p>
+        </div>
+        @empty
+        <div class="px-5 py-12 text-center text-gray-400">Katekis ini belum ditugaskan ke kelas manapun.</div>
+        @endforelse
+    </div>
+
+    {{-- Desktop: table --}}
+    <div class="hidden sm:block overflow-x-auto">
     <table class="w-full min-w-[560px] text-sm">
         <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -112,25 +141,13 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
             @forelse($katekis->batchesAsKatekis as $batch)
-            @php
-                $statusLabel = match($batch->status) {
-                    'active'    => 'Aktif',
-                    'completed' => 'Selesai',
-                    default     => 'Arsip',
-                };
-                $statusColor = match($batch->status) {
-                    'active'    => 'bg-blue-100 text-blue-700',
-                    'completed' => 'bg-emerald-100 text-emerald-700',
-                    default     => 'bg-gray-100 text-gray-500',
-                };
-            @endphp
             <tr class="hover:bg-gray-50/80 transition-colors">
                 <td class="px-5 py-3.5 text-gray-600">{{ $batch->program->name }}</td>
                 <td class="px-5 py-3.5 font-medium text-gray-800">
                     <a href="{{ route('admin.batches.show', $batch) }}" class="hover:text-blue-600 transition-colors">{{ $batch->name }}</a>
                 </td>
                 <td class="px-5 py-3.5">
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $statusColor }}">{{ $statusLabel }}</span>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $batchStatusColor($batch) }}">{{ $batchStatusLabel($batch) }}</span>
                 </td>
             </tr>
             @empty

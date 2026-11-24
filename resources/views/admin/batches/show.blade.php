@@ -13,7 +13,7 @@
             &middot; <span class="capitalize">{{ $batch->status }}</span>
         </p>
     </div>
-    <div class="flex gap-2">
+    <div class="flex gap-2 flex-wrap">
         @if($canManage)
         <a href="{{ route('admin.batches.edit', $batch) }}"
            class="text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl transition-colors shadow-sm">
@@ -125,10 +125,10 @@
             @php $warning = $batch->eligibilityWarningFor($p); @endphp
             <div class="bg-white border border-amber-200 rounded-xl overflow-hidden shadow-sm">
                 {{-- Header --}}
-                <div class="flex items-center justify-between gap-3 px-5 py-3 bg-amber-50 border-b border-amber-100">
-                    <div>
-                        <p class="font-semibold text-gray-800 text-sm">{{ $p->name }}</p>
-                        <p class="text-xs text-gray-500">{{ $p->email }} @if($p->phone) &middot; {{ $p->phone }} @endif</p>
+                <div class="flex items-start justify-between flex-wrap gap-y-1 gap-x-3 px-5 py-3 bg-amber-50 border-b border-amber-100">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-gray-800 text-sm break-words">{{ $p->name }}</p>
+                        <p class="text-xs text-gray-500 break-words">{{ $p->email }} @if($p->phone) &middot; {{ $p->phone }} @endif</p>
                     </div>
                     <span class="text-xs text-amber-600 font-medium shrink-0">Mendaftar {{ $p->pivot->joined_at ? \Carbon\Carbon::parse($p->pivot->joined_at)->format('d M Y') : '-' }}</span>
                 </div>
@@ -240,13 +240,54 @@
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 class="text-sm font-semibold text-gray-700">Peserta Terdaftar</h3>
         </div>
-        <table class="w-full text-sm">
+
+        {{-- Mobile: card list --}}
+        <div class="sm:hidden divide-y divide-gray-50">
+            @forelse($peserta as $i => $p)
+            <div class="px-4 py-3">
+                <div class="flex items-start justify-between gap-2 mb-1.5">
+                    <p class="font-medium text-gray-800 text-sm">{{ $i + 1 }}. {{ $p->name }}</p>
+                    @if($canManage)
+                    <form method="POST" action="{{ route('admin.batches.peserta.remove', [$batch, $p]) }}"
+                          onsubmit="return confirm('Hapus {{ $p->name }} dari kelas ini?')" class="shrink-0">
+                        @csrf @method('DELETE')
+                        <button class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                    </form>
+                    @endif
+                </div>
+                <p class="text-xs text-gray-500 mb-2">
+                    {{ $p->profile?->wilayah ?? '-' }} &middot; {{ $p->profile?->lingkungan ?? '-' }}
+                </p>
+                @if($canManage)
+                <form method="POST" action="{{ route('admin.batches.peserta.kelulusan', [$batch, $p]) }}">
+                    @csrf @method('PATCH')
+                    <select name="lulus" onchange="this.form.submit()"
+                            class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-300
+                                {{ $p->pivot->lulus === true ? 'bg-emerald-50 text-emerald-700' : ($p->pivot->lulus === false ? 'bg-red-50 text-red-700' : 'text-gray-400') }}">
+                        <option value="" @selected($p->pivot->lulus === null)>— Belum</option>
+                        <option value="1" @selected($p->pivot->lulus === true)>Lulus</option>
+                        <option value="0" @selected($p->pivot->lulus === false)>Tidak Lulus</option>
+                    </select>
+                </form>
+                @else
+                <span class="text-xs {{ $p->pivot->lulus === true ? 'text-emerald-700' : ($p->pivot->lulus === false ? 'text-red-700' : 'text-gray-400') }}">
+                    {{ $p->pivot->lulus === true ? 'Lulus' : ($p->pivot->lulus === false ? 'Tidak Lulus' : '— Belum') }}
+                </span>
+                @endif
+            </div>
+            @empty
+            <div class="px-4 py-8 text-center text-gray-400">Belum ada peserta.</div>
+            @endforelse
+        </div>
+
+        {{-- Desktop: table --}}
+        <table class="hidden sm:table w-full text-sm">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="text-left px-4 py-2.5 font-medium text-gray-600 w-8">No</th>
                     <th class="text-left px-4 py-2.5 font-medium text-gray-600">Nama</th>
-                    <th class="text-left px-4 py-2.5 font-medium text-gray-600 hidden sm:table-cell">Wilayah</th>
-                    <th class="text-left px-4 py-2.5 font-medium text-gray-600 hidden sm:table-cell">Lingkungan</th>
+                    <th class="text-left px-4 py-2.5 font-medium text-gray-600">Wilayah</th>
+                    <th class="text-left px-4 py-2.5 font-medium text-gray-600">Lingkungan</th>
                     <th class="text-left px-4 py-2.5 font-medium text-gray-600">Kelulusan</th>
                     <th class="px-4 py-2.5"></th>
                 </tr>
@@ -256,8 +297,8 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-2.5 text-gray-400">{{ $i + 1 }}</td>
                     <td class="px-4 py-2.5 font-medium text-gray-800">{{ $p->name }}</td>
-                    <td class="px-4 py-2.5 text-gray-500 hidden sm:table-cell">{{ $p->profile?->wilayah ?? '-' }}</td>
-                    <td class="px-4 py-2.5 text-gray-500 hidden sm:table-cell">{{ $p->profile?->lingkungan ?? '-' }}</td>
+                    <td class="px-4 py-2.5 text-gray-500">{{ $p->profile?->wilayah ?? '-' }}</td>
+                    <td class="px-4 py-2.5 text-gray-500">{{ $p->profile?->lingkungan ?? '-' }}</td>
                     <td class="px-4 py-2.5">
                         @if($canManage)
                         <form method="POST" action="{{ route('admin.batches.peserta.kelulusan', [$batch, $p]) }}">
@@ -310,11 +351,11 @@
     </div>
     <div class="space-y-3">
         @forelse($materials as $m)
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <span class="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-1 rounded-lg w-8 text-center">{{ $m->order }}</span>
-                <div>
-                    <a href="{{ route('admin.materials.show', $m) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm">{{ $m->title }}</a>
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-start justify-between flex-wrap gap-3">
+            <div class="flex items-start gap-3 min-w-0">
+                <span class="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-1 rounded-lg w-8 text-center shrink-0">{{ $m->order }}</span>
+                <div class="min-w-0">
+                    <a href="{{ route('admin.materials.show', $m) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm break-words">{{ $m->title }}</a>
                     @if($m->description)
                         <p class="text-xs text-gray-400 mt-0.5">{{ Str::limit($m->description, 80) }}</p>
                     @endif
@@ -352,9 +393,9 @@
     </div>
     <div class="space-y-3">
         @forelse($assignments as $a)
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between gap-3">
-            <div>
-                <a href="{{ route('admin.assignments.show', $a) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm">{{ $a->title }}</a>
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-start justify-between flex-wrap gap-3">
+            <div class="min-w-0">
+                <a href="{{ route('admin.assignments.show', $a) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm break-words">{{ $a->title }}</a>
                 <p class="text-xs text-gray-400 mt-0.5">
                     Deadline: {{ $a->deadline ? $a->deadline->translatedFormat('d M Y') : '-' }}
                     &middot; Nilai max: {{ $a->max_score }}
@@ -393,9 +434,9 @@
     </div>
     <div class="space-y-3">
         @forelse($tests as $t)
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between gap-3">
-            <div>
-                <a href="{{ route('admin.tests.show', $t) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm">{{ $t->title }}</a>
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-start justify-between flex-wrap gap-3">
+            <div class="min-w-0">
+                <a href="{{ route('admin.tests.show', $t) }}" class="font-medium text-gray-800 hover:text-blue-600 text-sm break-words">{{ $t->title }}</a>
                 <p class="text-xs text-gray-400 mt-0.5">
                     {{ $t->questions_count }} soal
                     @if($t->duration_minutes) &middot; {{ $t->duration_minutes }} menit @endif
@@ -475,9 +516,9 @@
         <div class="lg:col-span-2 space-y-3">
             @forelse($meetings as $meeting)
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="font-medium text-gray-800 text-sm">{{ $meeting->title }}</p>
+                <div class="flex items-start justify-between flex-wrap gap-3">
+                    <div class="min-w-0">
+                        <p class="font-medium text-gray-800 text-sm break-words">{{ $meeting->title }}</p>
                         <p class="text-xs text-gray-400 mt-0.5">
                             {{ $meeting->scheduled_at->translatedFormat('d M Y, H:i') }}
                             @if($meeting->location) &middot; {{ $meeting->location }} @endif

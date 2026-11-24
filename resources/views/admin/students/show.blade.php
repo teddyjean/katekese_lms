@@ -131,7 +131,48 @@
         <h2 class="font-semibold text-gray-700">Riwayat Kelas</h2>
         {{-- TODO: tambahkan link "Lihat Raport" per kelas di sini setelah halaman Raport dibangun --}}
     </div>
-    <div class="overflow-x-auto">
+    @php
+        $enrollColorMap = ['approved' => 'bg-emerald-100 text-emerald-700', 'rejected' => 'bg-red-100 text-red-700'];
+        $enrollLabelMap = ['approved' => 'Disetujui', 'rejected' => 'Ditolak'];
+        $batchStatusLabel = fn($batch) => match($batch->status) {
+            'active'    => 'Aktif',
+            'completed' => 'Lulus',
+            default     => 'Arsip',
+        };
+        $batchStatusColor = fn($batch) => match($batch->status) {
+            'active'    => 'bg-blue-100 text-blue-700',
+            'completed' => 'bg-emerald-100 text-emerald-700',
+            default     => 'bg-gray-100 text-gray-500',
+        };
+    @endphp
+
+    {{-- Mobile: card list --}}
+    <div class="sm:hidden divide-y divide-gray-50">
+        @forelse($enrollments as $batch)
+        <div class="px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2 mb-1">
+                <p class="font-medium text-gray-800 break-words">{{ $batch->name }}</p>
+                <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full {{ $enrollColorMap[$batch->pivot->status] ?? 'bg-amber-100 text-amber-700' }}">
+                    {{ $enrollLabelMap[$batch->pivot->status] ?? 'Menunggu' }}
+                </span>
+            </div>
+            <p class="text-xs text-gray-500 mb-1">{{ $batch->program->name }}</p>
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-gray-400">
+                    Bergabung {{ $batch->pivot->joined_at ? \Illuminate\Support\Carbon::parse($batch->pivot->joined_at)->format('d M Y') : '-' }}
+                </span>
+                @if($batch->pivot->status === 'approved')
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $batchStatusColor($batch) }}">{{ $batchStatusLabel($batch) }}</span>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="px-5 py-12 text-center text-gray-400">Siswa ini belum pernah mendaftar kelas.</div>
+        @endforelse
+    </div>
+
+    {{-- Desktop: table --}}
+    <div class="hidden sm:block overflow-x-auto">
     <table class="w-full min-w-[600px] text-sm">
         <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -144,38 +185,18 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
             @forelse($enrollments as $batch)
-            @php
-                $enrollColor = match($batch->pivot->status) {
-                    'approved' => 'bg-emerald-100 text-emerald-700',
-                    'rejected' => 'bg-red-100 text-red-700',
-                    default    => 'bg-amber-100 text-amber-700',
-                };
-                $enrollLabel = match($batch->pivot->status) {
-                    'approved' => 'Disetujui',
-                    'rejected' => 'Ditolak',
-                    default    => 'Menunggu',
-                };
-                $statusLabel = match($batch->status) {
-                    'active'    => 'Aktif',
-                    'completed' => 'Lulus',
-                    default     => 'Arsip',
-                };
-                $statusColor = match($batch->status) {
-                    'active'    => 'bg-blue-100 text-blue-700',
-                    'completed' => 'bg-emerald-100 text-emerald-700',
-                    default     => 'bg-gray-100 text-gray-500',
-                };
-            @endphp
             <tr class="hover:bg-gray-50/80 transition-colors">
                 <td class="px-5 py-3.5 text-gray-600">{{ $batch->program->name }}</td>
                 <td class="px-5 py-3.5 font-medium text-gray-800">{{ $batch->name }}</td>
                 <td class="px-5 py-3.5 text-gray-500">{{ $batch->pivot->joined_at ? \Illuminate\Support\Carbon::parse($batch->pivot->joined_at)->format('d M Y') : '-' }}</td>
                 <td class="px-5 py-3.5">
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $enrollColor }}">{{ $enrollLabel }}</span>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $enrollColorMap[$batch->pivot->status] ?? 'bg-amber-100 text-amber-700' }}">
+                        {{ $enrollLabelMap[$batch->pivot->status] ?? 'Menunggu' }}
+                    </span>
                 </td>
                 <td class="px-5 py-3.5">
                     @if($batch->pivot->status === 'approved')
-                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $statusColor }}">{{ $statusLabel }}</span>
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $batchStatusColor($batch) }}">{{ $batchStatusLabel($batch) }}</span>
                     @else
                         <span class="text-xs text-gray-400">-</span>
                     @endif

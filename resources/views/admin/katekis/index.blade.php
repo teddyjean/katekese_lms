@@ -12,16 +12,16 @@
 <form method="GET" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6 flex gap-3 flex-wrap">
     <input type="text" name="search" value="{{ request('search') }}"
            placeholder="Cari nama katekis..."
-           class="flex-1 min-w-48 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+           class="w-full sm:flex-1 sm:min-w-48 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
 
-    <select name="program_id" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+    <select name="program_id" class="flex-1 min-w-[140px] sm:flex-initial border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
         <option value="">Semua Bidang</option>
         @foreach($programs as $program)
             <option value="{{ $program->id }}" @selected(request('program_id') == $program->id)>{{ $program->name }}</option>
         @endforeach
     </select>
 
-    <select name="status" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+    <select name="status" class="flex-1 min-w-[140px] sm:flex-initial border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
         <option value="aktif" @selected(request('status', 'aktif') === 'aktif')>Aktif</option>
         <option value="nonaktif" @selected(request('status') === 'nonaktif')>Nonaktif</option>
         <option value="semua" @selected(request('status') === 'semua')>Semua Status</option>
@@ -33,8 +33,40 @@
     @endif
 </form>
 
-{{-- Tabel --}}
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+{{-- Mobile: card list --}}
+<div class="sm:hidden space-y-3 mb-6">
+    @forelse($katekisList as $person)
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-start justify-between gap-2 mb-2">
+                <div class="min-w-0">
+                    <a href="{{ route('admin.katekis.show', $person) }}" class="font-medium text-gray-800 hover:text-blue-600 transition-colors break-words">{{ $person->name }}</a>
+                    <p class="text-xs text-gray-400 truncate">{{ $person->email }}</p>
+                </div>
+                @can('manageKatekis', $person)
+                <a href="{{ route('admin.katekis.edit', $person) }}"
+                   class="shrink-0 text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors">
+                    Edit
+                </a>
+                @else
+                <a href="{{ route('admin.katekis.show', $person) }}"
+                   class="shrink-0 text-xs font-medium bg-gray-50 text-gray-700 hover:bg-gray-100 px-2.5 py-1 rounded-lg transition-colors">
+                    Lihat
+                </a>
+                @endcan
+            </div>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                <span>Wilayah: {{ $person->profile?->wilayah ?: '-' }}</span>
+                <span>Lingkungan: {{ $person->profile?->lingkungan ?: '-' }}</span>
+                <span>HP: {{ $person->phone ?: '-' }}</span>
+            </div>
+        </div>
+    @empty
+        <div class="bg-white rounded-2xl p-8 text-center text-gray-400 shadow-sm border border-gray-100">Tidak ada katekis ditemukan.</div>
+    @endforelse
+</div>
+
+{{-- Desktop: table --}}
+<div class="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
     <div class="overflow-x-auto">
     <table class="w-full min-w-[680px] text-sm">
         <thead class="bg-gray-50 border-b border-gray-100">
@@ -78,10 +110,11 @@
         </tbody>
     </table>
     </div>
-    @if($katekisList->hasPages())
-        <div class="px-5 py-4 border-t border-gray-100">
-            {{ $katekisList->links() }}
-        </div>
-    @endif
 </div>
+
+@if($katekisList->hasPages())
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4">
+        {{ $katekisList->links() }}
+    </div>
+@endif
 @endsection
